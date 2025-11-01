@@ -19,9 +19,10 @@ public class WTTCustomSlotImageService(ModHelper modHelper, SptLogger<WTTCustomS
     /// </summary>
     /// <param name="assembly">The calling assembly, used to determine the mod folder location</param>
     /// <param name="relativePath">(OPTIONAL) Custom path relative to the mod folder</param>
-    public void CreateSlotImages(Assembly assembly, string? relativePath = null)
+    public void CreateSlotImages(string? relativePath = null)
 
     {
+        var assembly = Assembly.GetExecutingAssembly();
         var assemblyLocation = modHelper.GetAbsolutePathToModFolder(assembly);
         var defaultDir = Path.Combine("db", "CustomSlotImages");
         var finalDir = Path.Combine(assemblyLocation, relativePath ?? defaultDir);

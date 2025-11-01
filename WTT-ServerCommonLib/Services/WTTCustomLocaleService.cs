@@ -26,10 +26,11 @@ public class WTTCustomLocaleService(
     /// </summary>
     /// <param name="assembly">The calling assembly, used to determine the mod folder location</param>
     /// <param name="relativePath">(OPTIONAL) Custom path relative to the mod folder</param>
-    public async Task CreateCustomLocales(Assembly assembly, string? relativePath = null)
+    public async Task CreateCustomLocales(string? relativePath = null)
 
     {
         _database = databaseServer.GetTables();
+        var assembly = Assembly.GetExecutingAssembly();
         var assemblyLocation = modHelper.GetAbsolutePathToModFolder(assembly);
         var defaultDir = Path.Combine("db", "CustomLocales");
         var finalDir = Path.Combine(assemblyLocation, relativePath ?? defaultDir);

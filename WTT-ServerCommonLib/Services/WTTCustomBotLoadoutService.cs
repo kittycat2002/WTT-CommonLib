@@ -32,9 +32,10 @@ public class WTTCustomBotLoadoutService(
     /// </summary>
     /// <param name="assembly">The calling assembly, used to determine the mod folder location</param>
     /// <param name="relativePath">(OPTIONAL) Custom path relative to the mod folder</param>
-    public async Task CreateCustomBotLoadouts(Assembly assembly, string? relativePath = null)
+    public async Task CreateCustomBotLoadouts(string? relativePath = null)
 
     {
+        var assembly = Assembly.GetExecutingAssembly();
         var assemblyLocation = modHelper.GetAbsolutePathToModFolder(assembly);
         var defaultDir = Path.Combine("db", "CustomBotLoadouts");
         var finalDir = Path.Combine(assemblyLocation, relativePath ?? defaultDir);

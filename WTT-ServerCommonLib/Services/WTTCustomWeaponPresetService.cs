@@ -20,8 +20,9 @@ public class WTTCustomWeaponPresetService(ModHelper modHelper, ISptLogger<WTTCus
     /// </summary>
     /// <param name="assembly">The calling assembly, used to determine the mod folder location</param>
     /// <param name="relativePath">(OPTIONAL) Custom path relative to the mod folder</param>
-    public async Task CreateCustomWeaponPresets(Assembly assembly, string? relativePath = null)
+    public async Task CreateCustomWeaponPresets(string? relativePath = null)
     {
+        var assembly = Assembly.GetExecutingAssembly();
         var assemblyLocation = modHelper.GetAbsolutePathToModFolder(assembly);
         var defaultDir = Path.Combine("db", "CustomWeaponPresets");
         var finalDir = Path.Combine(assemblyLocation, relativePath ?? defaultDir);

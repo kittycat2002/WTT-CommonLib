@@ -5,7 +5,7 @@
         <AssemblyName>WTT-ClientCommonLib</AssemblyName>
         <Description>A common library for adding slot images, rig layouts, and voices to the client</Description>
         <PackageId>WTT-ClientCommonLib</PackageId>
-        <Version>1.0.0</Version>
+        <Version>1.0.2</Version>
         <Authors>GrooveypenguinX</Authors>
         <Description>WTT Common Library - Client components</Description>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>

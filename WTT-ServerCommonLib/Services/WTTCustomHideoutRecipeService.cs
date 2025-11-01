@@ -29,11 +29,12 @@ public class WTTCustomHideoutRecipeService(
     /// </summary>
     /// <param name="assembly">The calling assembly, used to determine the mod folder location</param>
     /// <param name="relativePath">(OPTIONAL) Custom path relative to the mod folder</param>
-    public async Task CreateHideoutRecipes(Assembly assembly, string? relativePath = null)
+    public async Task CreateHideoutRecipes(string? relativePath = null)
 
     {
         try
         {
+            var assembly = Assembly.GetExecutingAssembly();
             var assemblyLocation = modHelper.GetAbsolutePathToModFolder(assembly);
             var defaultDir = Path.Combine("db", "CustomHideoutRecipes");
             var finalDir = Path.Combine(assemblyLocation, relativePath ?? defaultDir);
