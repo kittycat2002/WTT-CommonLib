@@ -32,7 +32,7 @@ public class WTTCustomClothingService(
     /// </summary>
     /// <param name="assembly">The calling assembly, used to determine the mod folder location</param>
     /// <param name="relativePath">(OPTIONAL) Custom path relative to the mod folder</param>
-    public async Task CreateCustomClothing(string? relativePath = null)
+    public async Task CreateCustomClothing(Assembly assembly, string? relativePath = null)
 
     {
         if (_database == null) _database = databaseService.GetTables();
@@ -40,7 +40,7 @@ public class WTTCustomClothingService(
         try
         {
 
-            var assembly = Assembly.GetExecutingAssembly();
+            
             var assemblyLocation = modHelper.GetAbsolutePathToModFolder(assembly);
             var defaultDir = Path.Combine("db", "CustomClothing");
             var finalDir = Path.Combine(assemblyLocation, relativePath ?? defaultDir);

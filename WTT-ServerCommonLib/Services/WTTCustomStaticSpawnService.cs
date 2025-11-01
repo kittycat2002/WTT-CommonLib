@@ -26,10 +26,10 @@ public class WTTCustomStaticSpawnService(
     /// </summary>
     /// <param name="assembly">The calling assembly, used to determine the mod folder location</param>
     /// <param name="relativePath">(OPTIONAL) Custom path relative to the mod folder.</param>
-    public async Task CreateCustomStaticSpawns(string? relativePath = null)
+    public async Task CreateCustomStaticSpawns(Assembly assembly, string? relativePath = null)
 
     {
-        var assembly = Assembly.GetExecutingAssembly();
+        
         var assemblyLocation = modHelper.GetAbsolutePathToModFolder(assembly);
         var modKey = assembly.GetName().Name!;
         var defaultDir = Path.Combine("db", "CustomStaticSpawns");

@@ -45,11 +45,11 @@ public class WTTCustomQuestService(
     /// </summary>
     /// <param name="assembly">The calling assembly, used to determine the mod folder location</param>
     /// <param name="relativePath">(OPTIONAL) Custom path relative to the mod folder</param>
-    public async Task CreateCustomQuests(string? relativePath = null)
+    public async Task CreateCustomQuests(Assembly assembly, string? relativePath = null)
 
     {
         _database = databaseServer.GetTables();
-        var assembly = Assembly.GetExecutingAssembly();
+        
         var assemblyLocation = modHelper.GetAbsolutePathToModFolder(assembly);
         var defaultDir = Path.Combine("db", "CustomQuests");
         var finalDir = Path.Combine(assemblyLocation, relativePath ?? defaultDir);

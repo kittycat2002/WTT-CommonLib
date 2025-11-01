@@ -33,13 +33,12 @@ public class WTTCustomVoiceService(
     /// </summary>
     /// <param name="assembly">The calling assembly, used to determine the mod folder location</param>
     /// <param name="relativePath">(OPTIONAL) Custom path relative to the mod folder</param>
-    public async Task CreateCustomVoices(string? relativePath = null)
+    public async Task CreateCustomVoices(Assembly assembly, string? relativePath = null)
     {
         if (_database == null) _database = databaseServer.GetTables();
 
         try
         {
-            var assembly = Assembly.GetExecutingAssembly();
             var assemblyLocation = modHelper.GetAbsolutePathToModFolder(assembly);
             var defaultDir = Path.Combine("db", "CustomVoices");
             var finalDir = Path.Combine(assemblyLocation, relativePath ?? defaultDir);
