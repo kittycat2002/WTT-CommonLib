@@ -50,6 +50,8 @@ A comprehensive modding library for SPT that simplifies adding custom content to
 SERVER
 1. Download the latest Nuget Package for WTT-ServerCommonLib through your preferred IDE
 2. Inject `WTTServerCommonLib` through the constructor
+3. Get your current assembly using `Assembly.GetExecutingAsswmbly()`
+4. Pass it to the services you desire to use
 
 CLIENT
 1. Download the latest Nuget Package for WTT-ClientCommonLib through your preferred IDE
@@ -86,9 +88,14 @@ public class YourMod(
 {
     public async Task OnLoad()
     {
+
+        // Get your current assembly
+        var assembly = Assembly.GetExecutingAssembly();
+
+
         // Use WTT-CommonLib services
-        await wttCommon.CustomItemServiceExtended.CreateCustomItems();
-        await wttCommon.CustomLocaleService.CreateCustomLocales();
+        await wttCommon.CustomItemServiceExtended.CreateCustomItems(assembly);
+        await wttCommon.CustomLocaleService.CreateCustomLocales(assembly);
         
         await Task.CompletedTask;
     }
@@ -98,7 +105,7 @@ public class YourMod(
 ### Key Points:
 - Inject `WTTServerCommonLib.WTTServerCommonLib` through the constructor
 - Set `TypePriority = OnLoadOrder.PostDBModLoader + 2` to load after the database
-- Utilize any of the public services available
+- Pass your current assembly to utilize any of the public services available
 
 ---
 
@@ -111,10 +118,10 @@ public class YourMod(
 **Usage**:
 ```csharp
 // Use default path (db/CustomItems/)
-await wttCommon.CustomItemServiceExtended.CreateCustomItems();
+await wttCommon.CustomItemServiceExtended.CreateCustomItems(assembly);
 
 // Or specify custom path
-await wttCommon.CustomItemServiceExtended.CreateCustomItems( 
+await wttCommon.CustomItemServiceExtended.CreateCustomItems( assembly,
     Path.Join("db", "MyCustomItemFolder"));
 ```
 
@@ -247,9 +254,9 @@ await wttCommon.CustomItemServiceExtended.CreateCustomItems(
 
 **Usage**:
 ```csharp
-await wttCommon.CustomLocaleService.CreateCustomLocales();
+await wttCommon.CustomLocaleService.CreateCustomLocales(assembly);
 // Or specify custom path
-await wttCommon.CustomLocaleService.CreateCustomLocales( 
+await wttCommon.CustomLocaleService.CreateCustomLocales( assembly,
     Path.Join("db", "MyCustomLocalesFolder"));
 ```
 
@@ -281,9 +288,9 @@ await wttCommon.CustomLocaleService.CreateCustomLocales(
 
 **Usage**:
 ```csharp
-await wttCommon.CustomQuestService.CreateCustomQuests();
+await wttCommon.CustomQuestService.CreateCustomQuests(assembly);
 // Or specify custom path
-await wttCommon.CustomQuestService.CreateCustomQuests( 
+await wttCommon.CustomQuestService.CreateCustomQuests( assembly,
     Path.Join("db", "MyCustomQuestsFolder"));
 ```
 
@@ -388,9 +395,9 @@ Quests listed here will only be available to the specified PMC faction.
 
 **Usage**:
 ```csharp
-await wttCommon.CustomQuestZoneService.CreateCustomQuestZones();
+await wttCommon.CustomQuestZoneService.CreateCustomQuestZones(assembly);
 // Or specify custom path
-await wttCommon.CustomQuestZoneService.CreateCustomQuestZones( 
+await wttCommon.CustomQuestZoneService.CreateCustomQuestZones( assembly,
     Path.Join("db", "MyCustomQuestZonesFolder"));
 ```
 
@@ -436,9 +443,9 @@ await wttCommon.CustomQuestZoneService.CreateCustomQuestZones(
 
 **Usage**:
 ```csharp
-await wttCommon.CustomVoiceService.CreateCustomVoices();
+await wttCommon.CustomVoiceService.CreateCustomVoices(assembly);
 // Or specify custom path
-await wttCommon.CustomVoiceService.CreateCustomVoices( 
+await wttCommon.CustomVoiceService.CreateCustomVoices( assembly,
     Path.Join("db", "MyCustomVoicesFolder"));
 ```
 
@@ -471,9 +478,9 @@ await wttCommon.CustomVoiceService.CreateCustomVoices(
 
 **Usage**:
 ```csharp
-await wttCommon.CustomHeadService.CreateCustomHeads();
+await wttCommon.CustomHeadService.CreateCustomHeads(assembly);
 // Or specify custom path
-await wttCommon.CustomHeadService.CreateCustomHeads( 
+await wttCommon.CustomHeadService.CreateCustomHeads( assembly,
     Path.Join("db", "MyCustomHeadsFolder"));
 ```
 
@@ -506,9 +513,9 @@ await wttCommon.CustomHeadService.CreateCustomHeads(
 
 **Usage**:
 ```csharp
-await wttCommon.CustomClothingService.CreateCustomClothing();
+await wttCommon.CustomClothingService.CreateCustomClothing(assembly);
 // Or specify custom path
-await wttCommon.CustomClothingService.CreateCustomClothing( 
+await wttCommon.CustomClothingService.CreateCustomClothing( assembly,
     Path.Join("db", "MyCustomClothingFolder"));
 ```
 
@@ -549,9 +556,9 @@ await wttCommon.CustomClothingService.CreateCustomClothing(
 
 **Usage**:
 ```csharp
-await wttCommon.CustomBotLoadoutService.CreateCustomBotLoadouts();
+await wttCommon.CustomBotLoadoutService.CreateCustomBotLoadouts(assembly);
 // Or specify custom path
-await wttCommon.CustomBotLoadoutService.CreateCustomBotLoadouts( 
+await wttCommon.CustomBotLoadoutService.CreateCustomBotLoadouts( assembly,
     Path.Join("db", "MyCustomBotLoadoutsFolder"));
 ```
 
@@ -602,9 +609,9 @@ await wttCommon.CustomBotLoadoutService.CreateCustomBotLoadouts(
 
 **Usage**:
 ```csharp
-await wttCommon.CustomLootspawnService.CreateCustomLootspawns();
+await wttCommon.CustomLootspawnService.CreateCustomLootspawns(assembly);
 // Or specify custom path
-await wttCommon.CustomLootspawnService.CreateCustomLootspawns( 
+await wttCommon.CustomLootspawnService.CreateCustomLootspawns( assembly,
     Path.Join("db", "MyCustomLootspawnsFolder"));
 ```
 
@@ -820,9 +827,9 @@ db/CustomLootspawns/
 
 **Usage**:
 ```csharp
-await wttCommon.CustomAssortSchemeService.CreateCustomAssortSchemes();
+await wttCommon.CustomAssortSchemeService.CreateCustomAssortSchemes(assembly);
 // Or specify custom path
-await wttCommon.CustomAssortSchemeService.CreateCustomAssortSchemes( 
+await wttCommon.CustomAssortSchemeService.CreateCustomAssortSchemes( assembly,
     Path.Join("db", "MyCustomAssortSchemesFolder"));
 ```
 
@@ -909,9 +916,9 @@ Each file defines trader assortments with three main sections:
 
 **Usage**:
 ```csharp
-await wttCommon.CustomStaticSpawnService.CreateCustomStaticSpawns();
+await wttCommon.CustomStaticSpawnService.CreateCustomStaticSpawns(assembly);
 // Or specify custom path
-await wttCommon.CustomStaticSpawnService.CreateCustomStaticSpawns( 
+await wttCommon.CustomStaticSpawnService.CreateCustomStaticSpawns(assembly,
     Path.Join("db", "MyCustomStaticSpawnsFolder"));
 ```
 
@@ -1054,9 +1061,9 @@ Press **~** in-game to access the debug console:
 
 **Usage**:
 ```csharp
-await wttCommon.CustomHideoutRecipeService.CreateHideoutRecipes();
+await wttCommon.CustomHideoutRecipeService.CreateHideoutRecipes(assembly);
 // Or specify custom path
-await wttCommon.CustomHideoutRecipeService.CreateHideoutRecipes( 
+await wttCommon.CustomHideoutRecipeService.CreateHideoutRecipes( assembly,
     Path.Join("db", "MyCustomHideoutRecipesFolder"));
 ```
 
@@ -1107,9 +1114,9 @@ await wttCommon.CustomHideoutRecipeService.CreateHideoutRecipes(
 
 **Usage**:
 ```csharp
-await wttCommon.CustomRigLayoutService.CreateRigLayouts();
+await wttCommon.CustomRigLayoutService.CreateRigLayouts(assembly);
 // Or specify custom path
-await wttCommon.CustomRigLayoutService.CreateRigLayouts( 
+await wttCommon.CustomRigLayoutService.CreateRigLayouts( assembly,
     Path.Join("db", "MyCustomRigLayoutsFolder"));
 ```
 
@@ -1125,9 +1132,9 @@ await wttCommon.CustomRigLayoutService.CreateRigLayouts(
 
 **Usage**:
 ```csharp
-wttCommon.CustomSlotImageService.CreateSlotImages();
+wttCommon.CustomSlotImageService.CreateSlotImages(assembly);
 // Or specify custom path
-wttCommon.CustomSlotImageService.CreateSlotImages( 
+wttCommon.CustomSlotImageService.CreateSlotImages( assembly,
     Path.Join("db", "MyCustomSlotImagesFolder"));
 ```
 
@@ -1145,10 +1152,10 @@ wttCommon.CustomSlotImageService.CreateSlotImages(
 **Usage**:
 ```csharp
 // Use default path (db/CustomBuffs/)
-await wttCommon.CustomBuffService.CreateCustomBuffs();
+await wttCommon.CustomBuffService.CreateCustomBuffs(assembly);
 
 // Or specify custom path
-await wttCommon.CustomBuffService.CreateCustomBuffs( 
+await wttCommon.CustomBuffService.CreateCustomBuffs( assembly,
     Path.Join("db", "MyCustomBuffsFolder"));
 ```
 
@@ -1209,11 +1216,11 @@ await wttCommon.CustomBuffService.CreateCustomBuffs(
 
 **Usage**:
 ```csharp
-// Use default path (config/CustomProfiles/)
-await wttCommon.CustomProfileService.AddCustomProfiles();
+// Use default path (db/CustomProfiles/)
+await wttCommon.CustomProfileService.AddCustomProfiles(assembly);
 
 // Or specify custom path
-await wttCommon.CustomProfileService.AddCustomProfiles( 
+await wttCommon.CustomProfileService.AddCustomProfiles( assembly,
     Path.Join("config", "MyCustomProfilesFolder"));
 ```
 
@@ -1242,10 +1249,10 @@ await wttCommon.CustomProfileService.AddCustomProfiles(
 **Usage**:
 ```csharp
 // Use default path (db/CustomWeaponPresets/)
-await wttCommon.CustomWeaponPresetService.CreateCustomWeaponPresets();
+await wttCommon.CustomWeaponPresetService.CreateCustomWeaponPresets(assembky);
 
 // Or specify custom path
-await wttCommon.CustomWeaponPresetService.CreateCustomWeaponPresets( 
+await wttCommon.CustomWeaponPresetService.CreateCustomWeaponPresets( assembly,
     Path.Join("db", "MyCustomWeaponPresetsFolder"));
 ```
 
