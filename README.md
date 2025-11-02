@@ -1618,7 +1618,7 @@ public class YOURMODServer(
         {
             Id = "6906a3c931abc0ab8b62d0d2",
             Name = "MyCustomItemTemplate",
-            Parent = "566162e44bdc2d3f298b4573", // Parent template ID
+            Parent = "566162e44bdc2d3f298b4573", // Parent template ID (in this case CompoundItem)
             Type = "Node",
             Properties = new TemplateItemProperties()
         };
