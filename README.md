@@ -26,7 +26,8 @@ A comprehensive modding library for SPT that simplifies adding custom content to
   - [CustomWeaponPresetService](#customweaponpresetservice)
 - [Example Mod Structure](#example-mod-structure)
 - [Available Client Services](#available-client-services)
-  - [CustomTemplateIdToObjectService](#customtemplateidtoobjectservice) 
+  - [CustomTemplateIdToObjectService](#customtemplateidtoobjectservice)
+    - [Server Side Custom Item Template Registration](#server-side-custom-item-template-registration) 
 
 ## Features
 
@@ -1566,5 +1567,83 @@ The service registers your mappings into three internal dictionaries within `Tem
 - Only register custom items — this service will not override vanilla Escape from Tarkov items
 - Template IDs in your mappings must match the item template IDs defined on your server database
 - You must still add your new templates and items to the server database via `db/templates/items` — this service only handles client-side object instantiation
-- Call `AddNewTemplateIdToObjectMapping()` during plugin initialization (in `Awake()` or similar lifecycle method)
+
+***
+
+### Server Side Custom Item Template Registration
+
+When using `CustomTemplateIdToObjectService` on the client, you must also register your custom item templates on the server. Here's how to set up custom items in your mod's database initialization:
+
+**Implementation Example**:
+
+```csharp
+using System.Reflection;
+using SPTarkov.DI.Annotations;
+using SPTarkov.Server.Core.DI;
+using SPTarkov.Server.Core.Models.Eft.Common.Tables;
+using SPTarkov.Server.Core.Models.Spt.Mod;
+using SPTarkov.Server.Core.Services;
+using Range = SemanticVersioning.Range;
+using Path = System.IO.Path;
+
+namespace YOURMOD.Server;
+
+public record ModMetadata : AbstractModMetadata
+{
+    public override string ModGuid { get; init; } = "com.YOURNAME.YOURMOD-Server";
+    public override string Name { get; init; } = "YOURMOD-Server";
+    public override string Author { get; init; } = "YourName";
+    public override List<string>? Contributors { get; init; } = null;
+    public override SemanticVersioning.Version Version { get; init; } = new("1.0.0");
+    public override Range SptVersion { get; init; } = new("~4.0.2");
+    public override List<string>? Incompatibilities { get; init; }
+    public override Dictionary<string, Range>? ModDependencies { get; init; }
+    public override string? Url { get; init; }
+    public override bool? IsBundleMod { get; init; } = true;
+    public override string License { get; init; } = "MIT";
+}
+
+[Injectable(TypePriority = OnLoadOrder.PostDBModLoader + 2)]
+public class YOURMODServer(
+    WTTServerCommonLib.WTTServerCommonLib wttCommon,
+    DatabaseService databaseService) : IOnLoad
+{
+    public async Task OnLoad()
+    {
+        Assembly assembly = Assembly.GetExecutingAssembly();
+        var itemsDb = databaseService.GetTables().Templates.Items;
+
+        // Base template for your custom item type
+        itemsDb["6906a3c931abc0ab8b62d0d2"] = new TemplateItem()
+        {
+            Id = "6906a3c931abc0ab8b62d0d2",
+            Name = "MyCustomItemTemplate",
+            Parent = "566162e44bdc2d3f298b4573", // Parent template ID
+            Type = "Node",
+            Properties = new TemplateItemProperties()
+        };
+
+        // Your custom item
+        itemsDb["6906a400270c1fac09608296"] = new TemplateItem()
+        {
+            Id = "6906a400270c1fac09608296",
+            Name = "MyCustomItemType",
+            Parent = "6906a3c931abc0ab8b62d0d2", // Point to your base template
+            Type = "Node",
+            Properties = new TemplateItemProperties()
+        };
+
+        // Register your new custom items using your new item or template types
+        await wttCommon.CustomItemServiceExtended.CreateCustomItems(assembly);
+        
+        await Task.CompletedTask;
+    }
+}
+```
+
+**Key Points**:
+
+- **Template IDs**: Must match the IDs used in your client-side `CustomTemplateIdToObjectService` mappings
+- **Parent Template**: Point to an existing item template that matches your item's functionality
+
 ***
