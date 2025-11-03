@@ -82,6 +82,7 @@ public record ModMetadata : AbstractModMetadata
     public override Dictionary<string, Range>? ModDependencies { get; init; }
     public override string? Url { get; init; }
     public override List<string>? Contributors { get; init; }
+    public override List<string>? Incompatibilities { get; init; }
 }
 
 [Injectable(TypePriority = OnLoadOrder.PostDBModLoader + 2)]
