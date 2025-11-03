@@ -154,9 +154,8 @@ await wttCommon.CustomItemServiceExtended.CreateCustomItems(assembly,
 
       // Asset prefab for this item: what 3D model and icon the game should use
       "Prefab": {
-        // Path to the AssetBundle and prefab file for the item
+        // Path to the AssetBundle file for the item
         "path": "Gear_Belts/belt_fannypack.bundle",
-        // Some mods use rcz for internal stuff, ignore if you don't use it
         "rcid": ""
       },
 
