@@ -136,19 +136,38 @@ await wttCommon.CustomItemServiceExtended.CreateCustomItems(assembly,
 
 ```json
 {
+  // Unique ID for this custom item
   "6761b213607f9a6f79017aef": {
+    // The vanilla Tarkov template ID of the item it's copying properties from (e.g., another belt or container)
     "itemTplToClone": "572b7adb24597762ae139821",
+
+    // The parent category ID in the game’s item database, controls where it appears in the item tree
     "parentId": "6815465859b8c6ff13f94026",
+
+    // The parent category in the handbook (for sorting/grouping in the UI for FleaMarket)
     "handbookParentId": "5b5f6f8786f77447ed563642",
+
+    // Properties that will override what the "itemTplToClone" has by default
     "overrideProperties": {
+      // Make this item examined (visible) by default in the player's inventory
       "ExaminedByDefault": true,
+
+      // Asset prefab for this item: what 3D model and icon the game should use
       "Prefab": {
+        // Path to the AssetBundle and prefab file for the item
         "path": "Gear_Belts/belt_fannypack.bundle",
+        // Some mods use rcz for internal stuff, ignore if you don't use it
         "rcid": ""
       },
+
+      // Inventory size: 2x2 grid spaces
       "Width": 2,
       "Height": 2,
+
+      // How much it weighs (kg)
       "Weight": 0.46,
+
+      // The grid ("container slots") inside the item where you can put other things
       "Grids": [
         {
           "_id": "belt_fannypackgrid",
@@ -159,13 +178,15 @@ await wttCommon.CustomItemServiceExtended.CreateCustomItems(assembly,
             "cellsV": 2,
             "filters": [
               {
-                "Filter": ["54009119af1c881c07000029"]
+                "Filter": ["54009119af1c881c07000029"] 
               }
             ]
           }
         }
       ]
     },
+
+    // How the item will appear in different languages ("locales")
     "locales": {
       "en": {
         "name": "Fanny Pack",
@@ -173,57 +194,108 @@ await wttCommon.CustomItemServiceExtended.CreateCustomItems(assembly,
         "description": "A fanny pack that can be worn at the waist."
       }
     },
+
+    // Price it will go for on the flea market (in roubles)
     "fleaPriceRoubles": 10900,
+
+    // Price in the handbook
     "handbookPriceRoubles": 7250,
+
+    // Which inventory slots this item can be added to (example slot: "ArmBand")
     "addtoInventorySlots": ["ArmBand"],
+
+    // Should it go in the hideout poster slots?
     "addtoHideoutPosterSlots": true,
+
+    // Should it be visible on posters/maps?  
     "addPosterToMaps": true,
+
+    // How likely it is to appear as a map poster
     "posterSpawnProbability": 10,
+
+    // Should it be available in statuette display slots in hideout?
     "addtoStatuetteSlots": true,
+
+    // (IF YOU ARE MAKING AMMO)Should it add ammo calibers to all clone locations?
     "addCaliberToAllCloneLocations": true,
+
+    // Should be included in static ammo tables (for spawns)
     "addtoStaticAmmo": true,
+
+    // Chance of spawning as static ammo
     "staticAmmoProbability": 5,
+
+    // Should it be available to bots/loadouts? (NOTE - THIS WILL PUSH TO BOT LOOT TABLES AT THE SAME PROBABILITY AS THE ITEM YOU'RE CLONING IF THAT BOT HAS THAT ITEM IN IT'S LOOT TABLE)
     "addtoBots": true,
+
+    // Should it be pushed to special slots
     "addtoSpecialSlots": true,
+
+    // Should it be pushed to anywhere the cloned item is allowed to go
     "addtoModSlots": true,
+
+    // What specific modSlot(s) to search for the cloned item ID and add yours to
     "modSlot": ["mod_muzzle"],
+
+    // Should it be available as a Hall of Fame item?
     "addtoHallOfFame": true,
+
+    // What hall of fame "slots"/categories this can go in
     "hallOfFameSlots": [
       "bigTrophies", 
       "smallTrophies", 
       "dogTags"
     ],
+
+    // Can it be used as generator fuel in hideout?
     "addtoGeneratorAsFuel": true,
+
+    // What stages of the generator it can be used in
     "generatorFuelSlotStages": [
       "1",
       "2",
       "3"
     ],
+
+    // Should it dynamically create a slot for a VANILLA ITEM THAT HAS A BONE PRESENT BUT NO SLOTS IN IT'S PROPS?
     "addtoEmptyPropSlots": true,
+
+    // Details for ONE empty prop slot it should be added to
     "emptyPropSlot": {
       "itemToAddTo": "628a66b41d5e41750e314f34",
       "modSlot": "mod_muzzle"
     },
+
+    // Should it be added to static loot containers (e.g., scav bodies)
     "addtoStaticLootContainers": true,
+
+    // List of containers and the chance it appears in them
     "StaticLootContainers": [
       {
-        "ContainerName": "LOOTCONTAINER_DEAD_SCAV",
-        "Probability": 54
+        "ContainerName": "LOOTCONTAINER_DEAD_SCAV", // ID or short name of container (SEE COMMONLIBS ITEMMAPS)
+        "Probability": 54 // percent chance to spawn
       }
     ],
+
+    // Should it be available in trader offers?
     "addtoTraders": true,
+
+    // Custom barter/trader settings
     "traders": {
       "RAGMAN": {
+        // Offer ID (unique ID - use a mongoID generator for this)
         "681ce253b2fd4632d780ca88": {
+          // Requirements for buying it at the trader
           "barterSettings": {
             "loyalLevel": 1,
             "unlimitedCount": true,
             "stackObjectsCount": 99
           },
+          // What you need to trade for it (roubles for example)
           "barters": [
             {
               "count": 26125,
-              "_tpl": "MONEY_ROUBLES"
+              "_tpl": "MONEY_ROUBLES" // Currency ID or short name (SEE SPT'S ITEMTPL CLASS)
             }
           ]
         }
