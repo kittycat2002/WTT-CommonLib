@@ -1,16 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using BepInEx.Logging;
 using EFT.UI.DragAndDrop;
 using UnityEngine;
 using WTTClientCommonLib.Helpers;
+using WTTClientCommonLib.Models;
 using WTTClientCommonLib.Services;
+using Object = UnityEngine.Object;
 
 namespace WTTClientCommonLib;
 
 public class ResourceLoader(ManualLogSource logger, AssetLoader assetLoader)
 {
-    public void LoadAllResourcesFromServer()
+    public static AudioManifest Manifest { get; private set; } = new();
+    public static AudioClipCache ClipCache { get; private set; }
+
+    static ResourceLoader()
+    {
+        LogHelper.LogDebug("ResourceLoader static constructor: Creating AudioClipCache");
+        var go = new GameObject("WTT_AudioClipCache");
+        Object.DontDestroyOnLoad(go);
+        ClipCache = go.AddComponent<AudioClipCache>();
+        ClipCache.hideFlags = HideFlags.DontUnloadUnusedAsset;
+        LogHelper.LogDebug("AudioClipCache created and set to DontDestroyOnLoad");
+    }
+
+    public async void LoadAllResourcesFromServer()
     {
         try
         {
@@ -18,6 +34,8 @@ public class ResourceLoader(ManualLogSource logger, AssetLoader assetLoader)
             LoadVoicesFromServer();
             LoadSlotImagesFromServer();
             LoadRigLayoutsFromServer();
+            LoadAudioManifestFromServer();
+            LoadAudioBundlesFromServer();
             assetLoader.InitializeBundles("/wttcommonlib/spawnsystem/bundles/get");
             assetLoader.SpawnConfigs = assetLoader.FetchSpawnConfigs("/wttcommonlib/spawnsystem/configs/get");
             LogHelper.LogDebug($"Loaded {assetLoader.SpawnConfigs.Count} spawn configurations");
@@ -28,7 +46,121 @@ public class ResourceLoader(ManualLogSource logger, AssetLoader assetLoader)
             logger.LogError($"Error loading resources from server: {ex}");
         }
     }
+    public async Task LoadAudioManifestFromServer()
+    {
+        try
+        {
+            LogHelper.LogDebug("Loading audio manifest from server...");
+        
+            var manifestResponse = Utils.Get<AudioManifest>("/wttcommonlib/audio/manifest/get");
+            if (manifestResponse == null)
+            {
+                LogHelper.LogWarn("No audio manifest received from server");
+                return;
+            }
+
+            Manifest = manifestResponse;
+            LogHelper.LogDebug($"Loaded manifest with {Manifest.AudioBundles.Count} audio bundles");
+            LogHelper.LogDebug($"FaceCard mappings: {Manifest.FaceCardMappings.Count} entries");
+            LogHelper.LogDebug($"Radio audio: {Manifest.RadioAudio.Count} entries");
+        }
+        catch (Exception ex)
+        {
+            LogHelper.LogError($"Error loading audio manifest: {ex}");
+        }
+    }
+    public void LoadAudioBundlesFromServer()
+    {
+        try
+        {
+            var bundleMap = Utils.Get<Dictionary<string, string>>("/wttcommonlib/audio/bundles/get");
+            if (bundleMap == null)
+            {
+                LogHelper.LogWarn("No audio bundles received from server");
+                return;
+            }
+
+            LogHelper.LogDebug($"Received {bundleMap.Count} audio bundles");
+
+            foreach (var kvp in bundleMap)
+            {
+                var bundleName = kvp.Key;
+                var base64Data = kvp.Value;
+        
+                if (string.IsNullOrEmpty(base64Data))
+                    continue;
+
+                try
+                {
+                    byte[] bundleData = Convert.FromBase64String(base64Data);
+                    var bundle = AssetBundle.LoadFromMemory(bundleData);
+            
+                    if (bundle == null)
+                    {
+                        LogHelper.LogWarn($"Failed to load audio bundle: {bundleName}");
+                        continue;
+                    }
+
+                    var clips = bundle.LoadAllAssets<AudioClip>();
+                    foreach (var clip in clips)
+                    {
+                        clip.LoadAudioData();
+                        ClipCache.CacheAudioClip(clip.name, clip);
+                        LogHelper.LogDebug($"Cached audio from bundle: {clip.name}");
+                    }
+
+                    LogHelper.LogDebug($"Loaded {clips.Length} audio clips from {bundleName}");
+                }
+                catch (Exception ex)
+                {
+                    LogHelper.LogError($"Failed to load audio bundle {bundleName}: {ex.Message}");
+                }
+            }
+
+            LogHelper.LogDebug("Audio bundles loaded successfully");
+        }
+        catch (Exception ex)
+        {
+            LogHelper.LogError($"Error loading audio bundles: {ex}");
+        }
+    }
+
     
+public static string GetAudioForFace(string faceName)
+{
+    LogHelper.LogDebug($"GetAudioForFace called with: {faceName}");
+    LogHelper.LogDebug($"Manifest has {Manifest.FaceCardMappings.Count} face entries");
+    
+    if (Manifest.FaceCardMappings.TryGetValue(faceName, out var audioKeys))
+    {
+        if (audioKeys.Count > 0)
+        {
+            var audioKey = audioKeys[0];
+            LogHelper.LogDebug($"Returning audio key: {audioKey}");
+            
+            if (ResourceLoader.ClipCache.TryGetAudioClip(audioKey, out var clip))
+            {
+                LogHelper.LogDebug($"Clip in cache: {clip.name}, duration: {clip.length}s");
+            }
+            else
+            {
+                LogHelper.LogDebug($"Clip NOT in cache: {audioKey}");
+            }
+            
+            return audioKey;
+        }
+    }
+    
+    return null;
+}
+
+
+public static List<string> GetRadioAudio()
+{
+    LogHelper.LogDebug($"GetRadioAudio called. Returning {Manifest.RadioAudio.Count} radio tracks");
+    LogHelper.LogDebug($"Radio audio: {string.Join(", ", Manifest.RadioAudio)}");
+    return Manifest.RadioAudio;
+}
     private void LoadVoicesFromServer()
     {
         try

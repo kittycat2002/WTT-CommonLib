@@ -1,7 +1,10 @@
 ﻿using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.DI;
 using SPTarkov.Server.Core.Models.Eft.Common;
+using SPTarkov.Server.Core.Models.Utils;
 using SPTarkov.Server.Core.Utils;
+using WTTServerCommonLib.Helpers;
+using WTTServerCommonLib.Models;
 using WTTServerCommonLib.Services;
 
 namespace WTTServerCommonLib.Routes;
@@ -13,8 +16,9 @@ public class WTTResourcesRouter(
     WTTCustomRigLayoutService rigService,
     WTTCustomSlotImageService slotService,
     WTTCustomStaticSpawnService staticSpawnService,
-    WTTCustomVoiceService voiceService
-) : DynamicRouter(jsonUtil, [
+    WTTCustomVoiceService voiceService,
+    WTTCustomAudioService audioService,
+    ISptLogger<WTTResourcesRouter> logger) : DynamicRouter(jsonUtil, [
     
     // Zones
     new RouteAction<EmptyRequestData>(
@@ -89,7 +93,33 @@ public class WTTResourcesRouter(
             return ValueTask.FromResult(jsonUtil.Serialize(voiceMappings) ??
                                         throw new NullReferenceException("Could not serialize voice mappings!"));
         }
+    ),
+    
+    // CustomAudio
+    new RouteAction<EmptyRequestData>(
+    "/wttcommonlib/audio/manifest/get", (_, _, _, _) =>
+    {
+        var manifest = audioService.GetAudioManifest();
+        return ValueTask.FromResult(jsonUtil.Serialize(manifest) ??
+                                    throw new NullReferenceException("Could not serialize audio manifest!"));
+    }
+    ),
+    new RouteAction<EmptyRequestData>(
+        "/wttcommonlib/audio/bundles/get", async (_, _, _, _) =>
+        {
+            var allBundles = audioService.GetAudioBundleManifest();
+            var payload = new Dictionary<string, string>();
+            foreach (var bundleName in allBundles)
+            {
+                var bundleData = await audioService.GetAudioBundleData(bundleName);
+                if (bundleData?.Length > 0)
+                    payload.Add(bundleName, Convert.ToBase64String(bundleData));
+            }
+
+            return jsonUtil.Serialize(payload) ?? throw new NullReferenceException("Could not serialize audio bundles!");
+        }
     )
+
 ])
 {
 }

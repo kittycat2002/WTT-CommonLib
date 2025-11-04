@@ -14,7 +14,7 @@ public static class LogHelper
     public static void LogDebug(string message)
     {
 #if DEBUG
-        Logger?.LogDebug(message);
+        Logger?.LogInfo(message);
 #endif
     }
 
@@ -26,5 +26,10 @@ public static class LogHelper
     public static void LogError(string message)
     {
         Logger?.LogError(message);
+    }
+
+    public static void LogWarn(string message)
+    {
+        Logger?.LogWarning(message);
     }
 }

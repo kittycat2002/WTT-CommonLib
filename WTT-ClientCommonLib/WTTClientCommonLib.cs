@@ -12,7 +12,7 @@ using WTTClientCommonLib.Services;
 
 namespace WTTClientCommonLib;
 
-[BepInPlugin("com.wtt.commonlib", "WTT-ClientCommonLib", "2.0.0")]
+[BepInPlugin("com.wtt.commonlib", "WTT-ClientCommonLib", "2.0.1")]
 public class WTTClientCommonLib : BaseUnityPlugin
 {
     private static CommandProcessor.CommandProcessor _commandProcessor;
@@ -36,13 +36,15 @@ public class WTTClientCommonLib : BaseUnityPlugin
             SpawnCommands = new SpawnCommands(Logger, AssetLoader);
             _playerWorldStats = new PlayerWorldStats(Logger);
             
-            // Initialize universal config first (Developer Mode)
             UniversalConfigManager.Initialize(Config);
-            
-            // Initialize feature configs - they check DeveloperMode internally
             ZoneConfigManager.Initialize(Config);
             StaticSpawnSystemConfigManager.Initialize(Config);
             
+            RadioSettings.Init(Config);
+            
+            new FaceCardViewInitPatch().Enable();
+            new FaceCardViewTogglePatch().Enable();
+            new BoomboxAudioPatch().Enable();
             new OnGameStarted().Enable();
             new ClothingBundleRendererPatch().Enable();
 

@@ -43,14 +43,12 @@ internal static class Utils
         return Singleton<GameWorld>.Instance.LocationId;
     }
 
-    // Access a route from the server
     public static T? Get<T>(string url)
     {
         try
         {
             var req = RequestHandler.GetJson(url);
 
-            // Defensive null & error check
             if (string.IsNullOrWhiteSpace(req) ||
                 req == "null" ||
                 (req.TrimStart().StartsWith("{") && (req.Contains("\"err\"") || req.Contains("\"error\""))))
@@ -67,8 +65,6 @@ internal static class Utils
             return default;
         }
     }
-
-
     // Create and return a basic cube to represent a zone position
     public static GameObject? CreateNewZoneCube(string objectName)
     {

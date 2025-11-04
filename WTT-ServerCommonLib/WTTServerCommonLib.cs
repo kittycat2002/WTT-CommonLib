@@ -43,6 +43,7 @@ public class WTTServerCommonLib(
     WTTCustomWeaponPresetService customWeaponPresetService,
     WTTCustomBuffService customBuffService,
     WTTCustomProfileService  customProfileService,
+    WTTCustomAudioService  customAudioService,
     ISptLogger<WTTServerCommonLib> logger
 ) : IOnLoad
 {
@@ -63,6 +64,7 @@ public class WTTServerCommonLib(
     public WTTCustomWeaponPresetService CustomWeaponPresetService { get; } = customWeaponPresetService; 
     public WTTCustomBuffService CustomBuffService { get; } = customBuffService;
     public WTTCustomProfileService CustomProfileService { get; } = customProfileService;
+    public WTTCustomAudioService CustomAudioService { get; } = customAudioService;
 
     public Task OnLoad()
     {
@@ -76,6 +78,7 @@ public class WTTServerCommonLibPostSptLoad(WTTCustomItemServiceExtended customIt
     public Task OnLoad()
     {
         customItemServiceExtended.ProcessDeferredModSlots();
+        customItemServiceExtended.ProcessDeferredSecureFilters();
         return Task.CompletedTask;
     }
 }
