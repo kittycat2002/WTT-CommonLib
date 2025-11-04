@@ -29,7 +29,7 @@ public class WTTCustomProfileService(
     {
         
         var assemblyLocation = modHelper.GetAbsolutePathToModFolder(assembly);
-        var defaultDir = Path.Combine("config", "CustomProfiles");
+        var defaultDir = Path.Combine("db", "CustomProfiles");
         var finalDir = Path.Combine(assemblyLocation, relativePath ?? defaultDir);
 
         if (!Directory.Exists(finalDir))
