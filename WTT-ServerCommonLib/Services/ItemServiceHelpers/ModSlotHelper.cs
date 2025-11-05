@@ -21,7 +21,7 @@ public class ModSlotHelper(ISptLogger<ModSlotHelper> logger, DatabaseService dat
             .ToList();
 
         var items = databaseService.GetItems();
-        foreach (var (_, parentTemplate) in items)
+        foreach (var (parentId, parentTemplate) in items)
         {
             if (parentTemplate.Properties?.Slots == null)
                 continue;
@@ -39,7 +39,7 @@ public class ModSlotHelper(ISptLogger<ModSlotHelper> logger, DatabaseService dat
                 if (slotFilter.Filter.Contains(finalTplToClone) &&
                     slotFilter.Filter.Add(newItemId))
                     LogHelper.Debug(logger,
-                        $"[ModSlots] Added {newItemId} to slot '{slot.Name}' for parent template {parentTemplate}");
+                        $"[ModSlots] Added {newItemId} to slot '{slot.Name}' for parent {parentId}");
             }
         }
     }
