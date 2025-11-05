@@ -10,7 +10,7 @@ namespace WTTServerCommonLib.Services;
 public class WTTCustomAudioService(ModHelper modHelper, SptLogger<WTTCustomAudioService> logger)
 {
     private readonly Dictionary<string, string> _audioBundles = new();
-    private readonly Dictionary<string, List<string>> _faceCardAudio = new(); 
+    private readonly Dictionary<string, FaceCardAudioEntry> _faceCardAudio = new(); 
     private readonly List<string> _radioAudio = new();
 
     public void RegisterAudioBundles(Assembly assembly, string? relativePath = null)
@@ -33,13 +33,15 @@ public class WTTCustomAudioService(ModHelper modHelper, SptLogger<WTTCustomAudio
         }
     }
 
-    public void AddFaceCardAudio(string faceName, string audioKey)
+    public void AddFaceCardAudio(string faceName, string audioKey, bool playOnRadioIfFaceIsSelected = false)
     {
-        if (!_faceCardAudio.ContainsKey(faceName))
-            _faceCardAudio[faceName] = new List<string>();
-
-        _faceCardAudio[faceName].Add(audioKey);
-        LogHelper.Debug(logger, $"Added FaceCard audio for {faceName}: {audioKey}");
+        if (!_faceCardAudio.TryGetValue(faceName, out var entry))
+        {
+            entry = new FaceCardAudioEntry();
+            _faceCardAudio[faceName] = entry;
+        }
+        entry.Audio.Add(audioKey);
+        entry.PlayOnRadio = playOnRadioIfFaceIsSelected;
     }
 
     public void AddRadioAudio(string audioKey)
@@ -92,6 +94,13 @@ public class WTTCustomAudioService(ModHelper modHelper, SptLogger<WTTCustomAudio
 public class AudioManifest
 {
     public List<string> AudioBundles { get; set; } = new();
-    public Dictionary<string, List<string>> FaceCardMappings { get; set; } = new();
+    public Dictionary<string, FaceCardAudioEntry> FaceCardMappings { get; set; } = new();
     public List<string> RadioAudio { get; set; } = new();
 }
+
+public class FaceCardAudioEntry
+{
+    public List<string> Audio { get; set; } = new();
+    public bool PlayOnRadio { get; set; } = false;
+}
+

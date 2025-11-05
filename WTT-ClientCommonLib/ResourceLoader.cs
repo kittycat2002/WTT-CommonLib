@@ -125,34 +125,43 @@ public class ResourceLoader(ManualLogSource logger, AssetLoader assetLoader)
         }
     }
 
-    
-public static string GetAudioForFace(string faceName)
-{
-    LogHelper.LogDebug($"GetAudioForFace called with: {faceName}");
-    LogHelper.LogDebug($"Manifest has {Manifest.FaceCardMappings.Count} face entries");
-    
-    if (Manifest.FaceCardMappings.TryGetValue(faceName, out var audioKeys))
+    public static string GetAudioForFace(string faceName)
     {
-        if (audioKeys.Count > 0)
+        LogHelper.LogDebug($"GetRandomAudioForFace called with: {faceName}");
+        LogHelper.LogDebug($"Manifest has {Manifest.FaceCardMappings.Count} face entries");
+
+        if (Manifest.FaceCardMappings.TryGetValue(faceName, out var faceEntry))
         {
-            var audioKey = audioKeys[0];
-            LogHelper.LogDebug($"Returning audio key: {audioKey}");
-            
-            if (ResourceLoader.ClipCache.TryGetAudioClip(audioKey, out var clip))
+            if (faceEntry.Audio != null && faceEntry.Audio.Count > 0)
             {
-                LogHelper.LogDebug($"Clip in cache: {clip.name}, duration: {clip.length}s");
+                // Pick one at random
+                int idx = UnityEngine.Random.Range(0, faceEntry.Audio.Count);
+                var audioKey = faceEntry.Audio[idx];
+                LogHelper.LogDebug($"Randomly selected audio key for face {faceName}: {audioKey}");
+
+                if (ClipCache.TryGetAudioClip(audioKey, out var clip))
+                {
+                    LogHelper.LogDebug($"Clip in cache: {clip.name}, duration: {clip.length}s");
+                }
+                else
+                {
+                    LogHelper.LogDebug($"Clip NOT in cache: {audioKey}");
+                }
+
+                return audioKey;
             }
             else
             {
-                LogHelper.LogDebug($"Clip NOT in cache: {audioKey}");
+                LogHelper.LogDebug($"No audio keys for face: {faceName}");
             }
-            
-            return audioKey;
         }
+        else
+        {
+            LogHelper.LogDebug($"No face entry found for: {faceName}");
+        }
+
+        return null;
     }
-    
-    return null;
-}
 
 
 public static List<string> GetRadioAudio()

@@ -1,14 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using EFT;
-using EFT.UI;
 using HarmonyLib;
 using SPT.Reflection.Patching;
 using UnityEngine;
 using WTTClientCommonLib.Components;
 using WTTClientCommonLib.Configuration;
 using WTTClientCommonLib.Helpers;
-using WTTClientCommonLib.Services;
 
 namespace WTTClientCommonLib.Patches;
 
@@ -149,6 +149,7 @@ internal class BoomboxAudioPatch : ModulePatch
         audioResource = null;
         var player = GamePlayerOwner.MyPlayer;
 
+        // 1. On first entrance, try to play face-specific audio
         if (tracker.PlayOnFirstEntrance && !tracker.HasPlayedFirstEntranceAudio && player?.Profile != null)
         {
             var faceId = player.Profile.Customization.TryGetValue(EBodyModelPart.Head, out var headId) ? headId : null;
@@ -164,13 +165,35 @@ internal class BoomboxAudioPatch : ModulePatch
             }
         }
 
-        var radioAudio = ResourceLoader.GetRadioAudio();
-        if (radioAudio.Count > 0)
+        // 2. RADIO: Build pool from radio + optionally head audio if alsoRadio == true
+        List<string> radioPool = new(ResourceLoader.GetRadioAudio());
+
+        if (player?.Profile != null)
         {
-            audioResource = radioAudio[UnityEngine.Random.Range(0, radioAudio.Count)];
+            var faceId = player.Profile.Customization.TryGetValue(EBodyModelPart.Head, out var headId) ? headId : null;
+            var faceName = faceId.LocalizedName();
+
+            if (!string.IsNullOrEmpty(faceName) 
+                && ResourceLoader.Manifest.FaceCardMappings.TryGetValue(faceName, out var faceEntry)
+                && faceEntry.PlayOnRadio 
+                && faceEntry.Audio is { Count: > 0 })
+            {
+                // Check if none of the audios are already in the radioPool
+                if (!faceEntry.Audio.Any(audioKey => radioPool.Contains(audioKey)))
+                {
+                    radioPool.AddRange(faceEntry.Audio);
+                }
+            }
+        }
+
+        if (radioPool.Count > 0)
+        {
+            audioResource = radioPool[UnityEngine.Random.Range(0, radioPool.Count)];
             return true;
         }
 
         return false;
     }
+
+    
 }
