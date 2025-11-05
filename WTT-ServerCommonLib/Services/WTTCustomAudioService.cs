@@ -13,6 +13,12 @@ public class WTTCustomAudioService(ModHelper modHelper, SptLogger<WTTCustomAudio
     private readonly Dictionary<string, FaceCardAudioEntry> _faceCardAudio = new(); 
     private readonly List<string> _radioAudio = new();
 
+    
+    /// <summary>
+    /// Registers all Unity audio bundles with extension '.bundle' found in the specified assembly's mod folder,
+    /// </summary>
+    /// <param name="assembly">The calling assembly, used to determine the mod folder location</param>
+    /// <param name="relativePath">(OPTIONAL) Custom path relative to the mod folder</param>
     public void RegisterAudioBundles(Assembly assembly, string? relativePath = null)
     {
         var assemblyLocation = modHelper.GetAbsolutePathToModFolder(assembly);
@@ -33,6 +39,15 @@ public class WTTCustomAudioService(ModHelper modHelper, SptLogger<WTTCustomAudio
         }
     }
 
+    
+    /// <summary>
+    /// Adds a custom audio key associated with a specific face name. Optionally marks the audio to play on radio only when the face is selected.
+    /// </summary>
+    /// <param name="faceName">The unique identifier of the face card.</param>
+    /// <param name="audioKey">The name (key) of the audio clip.</param>
+    /// <param name="playOnRadioIfFaceIsSelected">
+    /// If true, the audio will be included in the radio pool only when the face is actively selected. Defaults to false.
+    /// </param>
     public void AddFaceCardAudio(string faceName, string audioKey, bool playOnRadioIfFaceIsSelected = false)
     {
         if (!_faceCardAudio.TryGetValue(faceName, out var entry))
@@ -44,6 +59,11 @@ public class WTTCustomAudioService(ModHelper modHelper, SptLogger<WTTCustomAudio
         entry.PlayOnRadio = playOnRadioIfFaceIsSelected;
     }
 
+    
+    /// <summary>
+    /// Adds a audio key to the global radio audio pool, which plays independent of face selection.
+    /// </summary>
+    /// <param name="audioKey">The name of the radio audio clip.</param>
     public void AddRadioAudio(string audioKey)
     {
         _radioAudio.Add(audioKey);
