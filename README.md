@@ -80,7 +80,10 @@ public record ModMetadata : AbstractModMetadata
     public override Range SptVersion { get; init; } = new("4.0.1");
     public override string License { get; init; } = "MIT";
     public override bool? IsBundleMod { get; init; } = true;
-    public override Dictionary<string, Range>? ModDependencies { get; init; }
+    public override Dictionary<string, Range>? ModDependencies { get; init; } = new()
+    {
+        { "com.wtt.commonlib", new Range("~2.0.0") }
+    };
     public override string? Url { get; init; }
     public override List<string>? Contributors { get; init; }
     public override List<string>? Incompatibilities { get; init; }
