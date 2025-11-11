@@ -12,13 +12,12 @@ using WTTClientCommonLib.Services;
 
 namespace WTTClientCommonLib;
 
-[BepInPlugin("com.wtt.commonlib", "WTT-ClientCommonLib", "2.0.1")]
+[BepInPlugin("com.wtt.commonlib", "WTT-ClientCommonLib", "2.0.2")]
 public class WTTClientCommonLib : BaseUnityPlugin
 {
     private static CommandProcessor.CommandProcessor _commandProcessor;
     private static GameWorld _gameWorld;
     public static Player Player;
-
     private GameObject _updaterObject;
     public AssetLoader AssetLoader;
     private PlayerWorldStats _playerWorldStats;
