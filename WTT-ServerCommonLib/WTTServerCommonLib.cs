@@ -44,6 +44,7 @@ public class WTTServerCommonLib(
     WTTCustomBuffService customBuffService,
     WTTCustomProfileService  customProfileService,
     WTTCustomAudioService  customAudioService,
+    WTTCustomAchievementService customAchievementService,
     ISptLogger<WTTServerCommonLib> logger
 ) : IOnLoad
 {
@@ -65,6 +66,7 @@ public class WTTServerCommonLib(
     public WTTCustomBuffService CustomBuffService { get; } = customBuffService;
     public WTTCustomProfileService CustomProfileService { get; } = customProfileService;
     public WTTCustomAudioService CustomAudioService { get; } = customAudioService;
+    public WTTCustomAchievementService CustomAchievementService { get; } = customAchievementService;
 
     public Task OnLoad()
     {
