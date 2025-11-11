@@ -143,7 +143,7 @@ await wttCommon.CustomItemServiceExtended.CreateCustomItems(assembly,
   // Unique ID for this custom item
   "6909361f894fe6b4662b4ba2": {
     // The vanilla Tarkov template ID of the item it's copying properties from (e.g., another belt or container)
-    "itemTplToClone": "572b7adb24597762ae139821",
+    "itemTplToClone": "PUT A UNIQUE MONGOID HERE",
 
     // The parent category ID in the game’s item database, controls where it appears in the item tree
     "parentId": "6815465859b8c6ff13f94026",
@@ -291,7 +291,7 @@ await wttCommon.CustomItemServiceExtended.CreateCustomItems(assembly,
     "traders": {
       "RAGMAN": {
         // Offer ID (unique ID - use a mongoID generator for this)
-        "69093630552e8bcde48d4421": {
+        "PUT A UNIQUE MONGOID HERE": {
           // Requirements for buying it at the trader
           "barterSettings": {
             "loyalLevel": 1,
@@ -610,10 +610,10 @@ await wttCommon.CustomClothingService.CreateCustomClothing(assembly,
 ```json
 {
   "type": "top",
-  "suiteId": "6748037e298128d377dfffd0",
-  "outfitId": "67480381bd1eb568c78598df",
-  "topId": "67480383b253d50226f3becd",
-  "handsId": "67480396eda19f232a648533",
+  "suiteId": "PUT A UNIQUE MONGOID HERE",
+  "outfitId": "PUT A UNIQUE MONGOID HERE",
+  "topId": "PUT A UNIQUE MONGOID HERE",
+  "handsId": "PUT A UNIQUE MONGOID HERE",
   "locales": {
     "en": {
         "name": "Lara's Tattered Tank Top",
@@ -626,7 +626,9 @@ await wttCommon.CustomClothingService.CreateCustomClothing(assembly,
   "profileLevel": 1,
   "standing": 0,
   "currencyId": "ROUBLES",
-  "price": 150
+  "price": 150,
+  "achievementRequirements": [],
+  "questRequirements": []
 }
 ```
 </details>
@@ -746,7 +748,7 @@ db/CustomLootspawns/
                 "Items": [
                     {
                         "composedKey": "-69420",
-                        "_id": "68cf6c56cb996a3530052b53",
+                        "_id": "PUT A UNIQUE MONGOID HERE",
                         "_tpl": "68cf56067ff6ceab0c2fd49e",
                         "upd": {
                             "SpawnedInSession": true,
@@ -761,59 +763,6 @@ db/CustomLootspawns/
                                 "FireMode": "single"
                             }
                         }
-                    },
-                    {
-                        "_id": "68cf6c52cb996a3530052b4c",
-                        "_tpl": "564ca99c4bdc2d16268b4589",
-                        "slotId": "mod_magazine",
-                        "parentId": "68cf6c56cb996a3530052b53"
-                    },
-                    {
-                        "_id": "68cf6c52cb996a3530052b4d",
-                        "_tpl": "68c63ee6dcb5f65309eb4fcc",
-                        "slotId": "mod_muzzle",
-                        "upd": {
-                            "SpawnedInSession": true
-                        },
-                        "parentId": "68cf6c56cb996a3530052b53"
-                    },
-                    {
-                        "_id": "68cf6c52cb996a3530052b4e",
-                        "_tpl": "68c23b3d4a286357245eb641",
-                        "slotId": "mod_sight_rear",
-                        "upd": {
-                            "SpawnedInSession": true,
-                            "Sight": {
-                                "ScopesCurrentCalibPointIndexes": [
-                                    0
-                                ],
-                                "ScopesSelectedModes": [
-                                    0
-                                ],
-                                "SelectedScope": 0,
-                                "ScopeZoomValue": 0
-                            }
-                        },
-                        "parentId": "68cf6c56cb996a3530052b53"
-                    },
-                    {
-                        "_id": "68cf6c52cb996a3530052b4f",
-                        "_tpl": "68cf53ddb8f10c637706563c",
-                        "slotId": "mod_stock",
-                        "upd": {
-                            "SpawnedInSession": true
-                        },
-                        "parentId": "68cf6c56cb996a3530052b53"
-                    },
-                    {
-                        "_id": "68cf6c52cb996a3530052b50",
-                        "_tpl": "56dff216d2720bbd668b4568",
-                        "slotId": "cartridges",
-                        "location": 0,
-                        "upd": {
-                            "StackObjectsCount": 30
-                        },
-                        "parentId": "68cf6c52cb996a3530052b4c"
                     }
                 ]
             },
@@ -863,7 +812,7 @@ db/CustomLootspawns/
                 "Root": "68748750c2bc7bbc4797d713",
                 "Items": [
                     {
-                        "_id": "68748762bdc2e875d3940b4f",
+                        "_id": "PUT A UNIQUE MONGOID HERE",
                         "_tpl": "687464af51ed3be7e4f6f525",
                         "upd": {
                             "StackObjectsCount": 1
@@ -942,7 +891,7 @@ Each file defines trader assortments with three main sections:
   "PEACEKEEPER": {
     "items": [
       {
-        "_id": "my_custom_weapon_root",
+        "_id": "my_custom_weapon_root(PUT A UNIQUE MONGOID HERE)",
         "_tpl": "5447a9cd4bdc2dbd208b4567",
         "upd": {
           "Repairable": {
@@ -960,13 +909,13 @@ Each file defines trader assortments with three main sections:
         "slotId": "hideout"
       },
       {
-        "_id": "weapon_mod_magazine",
+        "_id": "PUT A UNIQUE MONGOID HERE",
         "_tpl": "55d480c04bdc2d1d4e8b456a",
         "slotId": "mod_magazine",
         "parentId": "my_custom_weapon_root"
       },
       {
-        "_id": "weapon_mod_stock",
+        "_id": "PUT A UNIQUE MONGOID HERE",
         "_tpl": "5649be884bdc2d79388b4577",
         "slotId": "mod_stock",
         "parentId": "my_custom_weapon_root"
@@ -1300,10 +1249,10 @@ await wttCommon.CustomBuffService.CreateCustomBuffs(assembly,
 **Usage**:
 ```csharp
 // Use default path (db/CustomProfiles/)
-await wttCommon.CustomProfileService.AddCustomProfiles(assembly);
+await wttCommon.CustomProfileService.CreateCustomProfiles(assembly);
 
 // Or specify custom path
-await wttCommon.CustomProfileService.AddCustomProfiles(assembly,
+await wttCommon.CustomProfileService.CreateCustomProfiles(assembly,
     Path.Join("config", "MyCustomProfilesFolder"));
 ```
 
@@ -1344,149 +1293,26 @@ await wttCommon.CustomWeaponPresetService.CreateCustomWeaponPresets(assembly,
 
 ```json
 {
-    "5a32808386f774764a3226d9": {
+    "PUT A UNIQUE MONGOID HERE": {
       "_changeWeaponName": true,
       "_id": "5a32808386f774764a3226d9",
       "_items": [
         {
-          "_id": "5a2fa9c4c4a282000d72204f",
+          "_id": "PUT A UNIQUE MONGOID HERE",
           "_tpl": "5447a9cd4bdc2dbd208b4567"
         },
         {
-          "_id": "5a2fa9c4c4a282000d722051",
+          "_id": "PUT A UNIQUE MONGOID HERE",
           "_tpl": "59db3a1d86f77429e05b4e92",
-          "parentId": "5a2fa9c4c4a282000d72204f",
+          "parentId": "POINTS TO WEAPON ROOT",
           "slotId": "mod_pistol_grip"
         },
         {
-          "_id": "5a32808386f774764a3226ce",
+          "_id": "PUT A UNIQUE MONGOID HERE",
           "_tpl": "59c1383d86f774290a37e0ca",
-          "parentId": "5a2fa9c4c4a282000d72204f",
+          "parentId": "POINTS TO WEAPON ROOT",
           "slotId": "mod_magazine"
         },
-        {
-          "_id": "5a32808386f774764a3226d1",
-          "_tpl": "59e6920f86f77411d82aa167",
-          "parentId": "5a32808386f774764a3226ce",
-          "slotId": "cartridges",
-          "upd": {
-            "StackObjectsCount": 60
-          }
-        },
-        {
-          "_id": "5a2fa9c4c4a282000d722053",
-          "_tpl": "59bfe68886f7746004266202",
-          "parentId": "5a2fa9c4c4a282000d72204f",
-          "slotId": "mod_reciever"
-        },
-        {
-          "_id": "5a2fa9c4c4a282000d722058",
-          "_tpl": "57adff4f24597737f373b6e6",
-          "parentId": "5a2fa9c4c4a282000d722053",
-          "slotId": "mod_scope"
-        },
-        {
-          "_id": "5a2fa9c4c4a282000d722059",
-          "_tpl": "55d35ee94bdc2d61338b4568",
-          "parentId": "5a2fa9c4c4a282000d722053",
-          "slotId": "mod_barrel"
-        },
-        {
-          "_id": "5a2fa9c4c4a282000d72205b",
-          "_tpl": "59bffc1f86f77435b128b872",
-          "parentId": "5a2fa9c4c4a282000d722059",
-          "slotId": "mod_muzzle"
-        },
-        {
-          "_id": "5a2fa9c4c4a282000d722060",
-          "_tpl": "59bffbb386f77435b379b9c2",
-          "parentId": "5a2fa9c4c4a282000d72205b",
-          "slotId": "mod_muzzle"
-        },
-        {
-          "_id": "5a2fa9c4c4a282000d72205c",
-          "_tpl": "56eabcd4d2720b66698b4574",
-          "parentId": "5a2fa9c4c4a282000d722059",
-          "slotId": "mod_gas_block"
-        },
-        {
-          "_id": "5a2fa9c4c4a282000d72205a",
-          "_tpl": "595cf16b86f77427440c32e2",
-          "parentId": "5a2fa9c4c4a282000d722053",
-          "slotId": "mod_handguard"
-        },
-        {
-          "_id": "5a32808386f774764a3226d2",
-          "_tpl": "5649a2464bdc2d91118b45a8",
-          "parentId": "5a2fa9c4c4a282000d72205a",
-          "slotId": "mod_scope"
-        },
-        {
-          "_id": "5a32808386f774764a3226d4",
-          "_tpl": "58d39d3d86f77445bb794ae7",
-          "parentId": "5a32808386f774764a3226d2",
-          "slotId": "mod_scope"
-        },
-        {
-          "_id": "5a32808386f774764a3226d8",
-          "_tpl": "58d399e486f77442e0016fe7",
-          "parentId": "5a32808386f774764a3226d4",
-          "slotId": "mod_scope"
-        },
-        {
-          "_id": "5a2fa9c4c4a282000d72205d",
-          "_tpl": "59e0bed186f774156f04ce84",
-          "parentId": "5a2fa9c4c4a282000d72205a",
-          "slotId": "mod_mount_000"
-        },
-        {
-          "_id": "5a32808386f774764a3226d5",
-          "_tpl": "59f8a37386f7747af3328f06",
-          "parentId": "5a2fa9c4c4a282000d72205d",
-          "slotId": "mod_foregrip"
-        },
-        {
-          "_id": "5a2fa9c4c4a282000d72205e",
-          "_tpl": "59e0bdb186f774156f04ce82",
-          "parentId": "5a2fa9c4c4a282000d72205a",
-          "slotId": "mod_mount_002"
-        },
-        {
-          "_id": "5a32808386f774764a3226d6",
-          "_tpl": "56def37dd2720bec348b456a",
-          "parentId": "5a2fa9c4c4a282000d72205e",
-          "slotId": "mod_tactical"
-        },
-        {
-          "_id": "5a2fa9c4c4a282000d72205f",
-          "_tpl": "59e0be5d86f7742d48765bd2",
-          "parentId": "5a2fa9c4c4a282000d72205a",
-          "slotId": "mod_mount_003"
-        },
-        {
-          "_id": "5a32808386f774764a3226d7",
-          "_tpl": "544909bb4bdc2d6f028b4577",
-          "parentId": "5a2fa9c4c4a282000d72205f",
-          "slotId": "mod_tactical"
-        },
-        {
-          "_id": "5a32808386f774764a3226d3",
-          "_tpl": "59e0be5d86f7742d48765bd2",
-          "parentId": "5a2fa9c4c4a282000d72205a",
-          "slotId": "mod_mount_004"
-        },
-        {
-          "_id": "5a32808386f774764a3226cf",
-          "_tpl": "5947e98b86f774778f1448bc",
-          "parentId": "5a2fa9c4c4a282000d72204f",
-          "slotId": "mod_stock"
-        },
-        {
-          "_id": "5a32808386f774764a3226d0",
-          "_tpl": "56ea7165d2720b6e518b4583",
-          "parentId": "5a2fa9c4c4a282000d72204f",
-          "slotId": "mod_charge"
-        }
       ],
       "_name": "M4A1 2017 New year",
       "_parent": "5a2fa9c4c4a282000d72204f",
@@ -1565,13 +1391,13 @@ wttCommon.CustomAudioService.RegisterAudioBundles(assembly);
 
 
 // Add face-specific audio keys without pushing to the radios
-wttCommon.CustomAudioService.AddFaceCardAudio("SoldierFace", "soldier_radio_01", false);
+wttCommon.CustomAudioService.CreateFaceCardAudio("SoldierFace", "soldier_radio_01", false);
 
 // Add face-specific audio keys with radio playback condition
-wttCommon.CustomAudioService.AddFaceCardAudio("SoldierFace", "soldier_radio_01", true);
+wttCommon.CustomAudioService.CreateFaceCardAudio("SoldierFace", "soldier_radio_01", true);
 
 // Add standalone radio audio
-wttCommon.CustomAudioService.AddRadioAudio("general_radio_ambient");
+wttCommon.CustomAudioService.CreateRadioAudio("general_radio_ambient");
 
 ```
 
