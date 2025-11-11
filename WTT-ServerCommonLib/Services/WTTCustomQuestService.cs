@@ -180,7 +180,7 @@ public class WTTCustomQuestService(
     {
         if (questFiles.Count == 0)
         {
-            logger.Warning($"{traderId}: No quest files found or loaded");
+            LogHelper.Debug(logger,$"{traderId}: No quest files found or loaded");
             return;
         }
 
@@ -268,7 +268,7 @@ public class WTTCustomQuestService(
 
             if (locales.Count == 0)
             {
-                logger.Warning($"{traderId}: No locale files found or loaded from {localesPath}");
+                LogHelper.Debug(logger,$"{traderId}: No locale files found or loaded from {localesPath}");
                 return;
             }
 
@@ -323,7 +323,6 @@ public class WTTCustomQuestService(
 
     private async Task ImportQuestTimeConfig(string basePath)
     {
-        // Try both .json and .jsonc
         string[] filenames = ["QuestTimeData.json", "QuestTimeData.jsonc"];
         var configPath = filenames
             .Select(name => Path.Combine(basePath, name))
@@ -371,7 +370,7 @@ public class WTTCustomQuestService(
             var questConfig = cfgServer.GetConfig<QuestConfig>();
             if (config == null)
             {
-                logger.Warning("QuestSideData.json is empty or invalid");
+                LogHelper.Debug(logger,"QuestSideData.json is empty or invalid");
                 return;
             }
 
