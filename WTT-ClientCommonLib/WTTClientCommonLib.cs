@@ -12,7 +12,7 @@ using WTTClientCommonLib.Services;
 
 namespace WTTClientCommonLib;
 
-[BepInPlugin("com.wtt.commonlib", "WTT-ClientCommonLib", "2.0.2")]
+[BepInPlugin("com.wtt.commonlib", "WTT-ClientCommonLib", "2.0.3")]
 public class WTTClientCommonLib : BaseUnityPlugin
 {
     private static CommandProcessor.CommandProcessor _commandProcessor;
