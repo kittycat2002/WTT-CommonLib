@@ -143,7 +143,7 @@ await wttCommon.CustomItemServiceExtended.CreateCustomItems(assembly,
   // Unique ID for this custom item
   "6909361f894fe6b4662b4ba2": {
     // The vanilla Tarkov template ID of the item it's copying properties from (e.g., another belt or container)
-    "itemTplToClone": "PUT A UNIQUE MONGOID HERE",
+    "itemTplToClone": "PUT THE MONGOID FOR THE ITEM YOU ARE CLONING HERE",
 
     // The parent category ID in the game’s item database, controls where it appears in the item tree
     "parentId": "6815465859b8c6ff13f94026",
