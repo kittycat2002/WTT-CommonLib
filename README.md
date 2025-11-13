@@ -25,6 +25,7 @@ A comprehensive modding library for SPT that simplifies adding custom content to
   - [CustomProfileService](#customprofileservice)
   - [CustomWeaponPresetService](#customweaponpresetservice)
   - [CustomAudioService](#customaudioservice)
+  - [CustomAchievementService](#customachievementservice)
 - [Example Mod Structure](#example-mod-structure)
 - [Available Client Services](#available-client-services)
   - [CustomTemplateIdToObjectService](#customtemplateidtoobjectservice)
@@ -141,7 +142,7 @@ await wttCommon.CustomItemServiceExtended.CreateCustomItems(assembly,
 ```json
 {
   // Unique ID for this custom item
-  "6909361f894fe6b4662b4ba2": {
+  "THIS MUST BE A UNIQUE MONGOID": {
     // The vanilla Tarkov template ID of the item it's copying properties from (e.g., another belt or container)
     "itemTplToClone": "PUT THE MONGOID FOR THE ITEM YOU ARE CLONING HERE",
 
@@ -1405,6 +1406,138 @@ wttCommon.CustomAudioService.CreateRadioAudio("general_radio_ambient");
 
 - Audio bundles must be packaged as Unity `.bundle` files and placed in the expected mod directory path (`db/CustomAudioBundles` by default).
 - Face card audio can be flagged to play on radio only when the corresponding face is in use, supporting dynamic sound experiences.
+
+***
+
+### CustomAchievementService
+
+**Purpose**: Creates custom achievements, complete with locales and custom images
+
+**Usage**:
+```csharp
+// Use default path (db/CustomAchievements/)
+await wttCommon.CustomAchievementService.CreateCustomAchievements(assembly);
+
+// Or specify custom path
+await wttCommon.CustomAchievementService.CreateCustomAchievements(assembly,
+    Path.Join("db", "MyCustomAchievementsFolder"));
+```
+
+**Default Folder Structure**:
+
+```
+db/CustomAchievements/
+├── Achievements/
+│   ├── achievement_set_001.json
+│   └── achievement_set_002.json
+├── Locales/
+│   ├── en.json
+│   ├── ru.json
+│   └── de.json
+└── Images/
+    ├── achievement_icon_001.png
+    ├── achievement_icon_002.jpg
+    └── achievement_rewards.png
+```
+
+**Configuration Files**:
+
+**Achievements** (`Achievements/*.json`) - Achievement definitions:
+
+<details>
+<summary>Example Achievement Configuration (Click to expand)</summary>
+
+```json
+[
+{
+    "id": "achievement_001(THIS MUST BE A UNIQUE MONGOID)", 
+    "imageUrl": "/files/achievement/hipoint.png",
+    "assetPath": "",
+    "rewards": [],
+    "conditions": {
+      "availableForFinish": [
+        {
+          "id": "THIS MUST BE A UNIQUE MONGOID",
+          "index": 0,
+          "dynamicLocale": false,
+          "visibilityConditions": [],
+          "globalQuestCounterId": "",
+          "parentId": "",
+          "value": 1,
+          "type": "Elimination",
+          "oneSessionOnly": false,
+          "completeInSeconds": 0,
+          "doNotResetIfCounterCompleted": false,
+          "isResetOnConditionFailed": false,
+          "isNecessary": false,
+          "counter": {
+            "id": "THIS MUST BE A UNIQUE MONGOID",
+            "conditions": [
+              {
+                "id": "THIS MUST BE A UNIQUE MONGOID",
+                "dynamicLocale": false,
+                "target": "Savage",
+                "value": 1,
+                "compareMethod": ">=",
+                "conditionType": "Kills",
+                "weapon": [
+                  "679f2453d1970258c1df3fce"
+                ],
+                "bodyPart": [],
+                "daytime": {
+                  "from": 0,
+                  "to": 0
+                },
+                "distance": {
+                  "compareMethod": ">=",
+                  "value": 0
+                },
+                "resetOnSessionEnd": false,
+                "savageRole": [],
+                "enemyEquipmentExclusive": [],
+                "enemyEquipmentInclusive": [],
+                "enemyHealthEffects": [],
+                "weaponCaliber": [],
+                "weaponModsExclusive": [],
+                "weaponModsInclusive": []
+              }
+            ]
+          },
+          "conditionType": "CounterCreator"
+        }
+      ],
+      "fail": []
+    },
+    "instantComplete": false,
+    "showNotificationsInGame": true,
+    "showProgress": true,
+    "prefab": "",
+    "rarity": "Common",
+    "hidden": false,
+    "showConditions": true,
+    "progressBarEnabled": true,
+    "side": "Pmc",
+    "index": 9001
+  }
+]  
+```
+</details>
+
+**Locales** (`Locales/*.json`) - Multi-language support:
+
+```json
+{
+  "achievement_001 name": "Custom Achievement Title",
+  "achievement_001 description": "Detailed description of what this achievement requires",
+  "achievement_002 name": "Secret Challenge",
+  "achievement_002 description": "A hidden achievement description"
+}
+```
+
+**Important Notes**:
+- Achievement JSON files **must match BSG's Achievement model exactly** — invalid achievement data will be skipped with a warning
+- Each achievement requires a valid 24-character MongoDB ID
+- Images are automatically registered as routes: `/files/achievement/{imageName}`
 
 ***
 
