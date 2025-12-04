@@ -26,6 +26,7 @@ A comprehensive modding library for SPT that simplifies adding custom content to
   - [CustomWeaponPresetService](#customweaponpresetservice)
   - [CustomAudioService](#customaudioservice)
   - [CustomAchievementService](#customachievementservice)
+  - [CustomCustomizationService](#customcustomizationservice)
 - [Example Mod Structure](#example-mod-structure)
 - [Available Client Services](#available-client-services)
   - [CustomTemplateIdToObjectService](#customtemplateidtoobjectservice)
@@ -945,7 +946,7 @@ Each file defines trader assortments with three main sections:
 
 ### CustomStaticSpawnService
 
-**Purpose**: Places persistent 3D objects on maps with advanced quest-based conditions. Supports complex spawn logic including quest status checks, item requirements, boss detection, and linked quest conditions.
+**Purpose**: Places persistent 3D objects on maps with advanced conditions. Supports complex spawn logic including quest status checks, item requirements, boss detection, and linked quest conditions.
 
 **Usage**:
 ```csharp
@@ -955,17 +956,63 @@ await wttCommon.CustomStaticSpawnService.CreateCustomStaticSpawns(assembly,
     Path.Join("db", "MyCustomStaticSpawnsFolder"));
 ```
 
-**Default Folder Structure**:
+**Setup**
+
+**1. Package your prefabs into Unity AssetBundles**
+
+Create `.bundle` files containing your prefabs using Unity's AssetBundle build tools.
+
+**2. Register bundles in `bundles.json`**
+
+Add entries to your mod's `bundles.json` manifest:
+```json
+{
+  "key": "staticspawns/my_objects.bundle",
+  "dependencies": [
+    "assets/commonassets/physics/physicsmaterials.bundle",
+    "shaders",
+    "cubemaps"
+  ]
+},
+{
+  "key": "staticspawns/quest_decorations.bundle",
+  "dependencies": [
+    "assets/commonassets/physics/physicsmaterials.bundle",
+    "shaders",
+    "cubemaps"
+    ]
+}
+```
+
+**3. Place bundle files in your mod**
+
+```
+YourMod/
+└── bundles/
+    └── staticspawns/
+        ├── my_objects.bundle
+        └── quest_decorations.bundle
+```
+
+**4. Create spawn configuration files**
+
+Place JSON configs in your mod's `db/CustomStaticSpawns/CustomSpawnConfigs/`:
 
 ```
 db/CustomStaticSpawns/
-├── StaticBundles/               # Unity AssetBundles containing prefabs
-│   ├── my_objects.bundle
-│   └── quest_decorations.bundle
-└── CustomSpawnConfigs/          # Configuration files
+└── CustomSpawnConfigs/
     ├── interchange_spawns.json
     ├── woods_spawns.json
     └── customs_spawns.json
+```
+
+**5. Register in your mod's OnLoad**
+
+```csharp
+public async Task OnLoad()
+{
+    await wttCommon.CustomStaticSpawnService.CreateCustomStaticSpawns(assembly);
+}
 ```
 
 **Configuration Structure**:
@@ -1039,7 +1086,7 @@ db/CustomStaticSpawns/
 |----------|------|-------------|
 | `questId` | string | Quest ID that must exist/not exist based on conditions |
 | `locationID` | string | Map ID where the object spawns (lowercase, case-sensitive) |
-| `bundleName` | string | Name of the AssetBundle containing the prefab |
+| `bundleName` | string | Name of the AssetBundle containing the prefab (from `bundles.json` key) |
 | `prefabName` | string | Name of the GameObject inside the bundle to spawn |
 | `position` | XYZ | World position where object spawns |
 | `rotation` | XYZ | Euler angles for object rotation |
@@ -1079,14 +1126,22 @@ Press **~** in-game to access the debug console:
 **Example Workflow**:
 
 1. Build Unity prefabs and package as AssetBundles (my_objects.bundle)
-2. Place bundle in `db/CustomStaticSpawns/StaticBundles/`
-3. Run in-game: `SpawnObject my_objects QuestMarker_001`
-4. Position object with edit mode controls
-5. Run: `ExportSpawnedObjectInfo` to generate config JSON
-6. Move JSON to `db/CustomStaticSpawns/CustomSpawnConfigs/`
-7. Call `CreateCustomStaticSpawns()` to load configurations
+2. Register bundle in `bundles.json` with key `staticspawns/my_objects.bundle`
+3. Place bundle in `bundles/staticspawns/my_objects.bundle`
+4. Run in-game: `SpawnObject my_objects QuestMarker_001`
+5. Position object with edit mode controls
+6. Run: `ExportSpawnedObjectInfo` to generate config JSON
+7. Move JSON to `db/CustomStaticSpawns/CustomSpawnConfigs/`
+8. Call `CreateCustomStaticSpawns(assembly)` to load your configurations
+
+**Notes**:
+
+- Bundle names in configs must match either the path to your bundle from your `bundles.json` (i.e `StaticSpawns/my_objects.bundle`) OR the bundle name itself (without `.bundle` extension) 
+- All bundles are loaded through SPT's Bundle Manager for consistency and efficiency
+- Objects only spawn when all specified conditions are met
 
 ---
+
 
 ### CustomHideoutRecipeService
 
@@ -1336,78 +1391,110 @@ await wttCommon.CustomWeaponPresetService.CreateCustomWeaponPresets(assembly,
 ## CustomAudioService
 
 ### Purpose
-Handles registration and management of custom audio bundles for character creation face card audio, and radio audio. This service allows mods to associate audio clips with player faces and optionally include face-specific audio in radio pools, as well as just push custom audio to the radios.
+Handles registration and management of custom audio for character creation face cards and hideout radios. This service manages audio bundles through SPT's Bundle Manager, eliminating redundant downloads and improving compatibility with multiplayer mods like Fika.
 
 ### Usage
 
-- Register audio asset bundles located in your mod folder.
-- Add audio keys for faces with the option to play them on radio only when the face is selected.
-- Add generic radio audio keys.
+Audio bundles are registered through SPT's bundle manifest system rather than being loaded separately, ensuring efficient resource management and compatibility.
 
 ### Key Methods
 
-- `RegisterAudioBundles(Assembly assembly, string? relativePath = null)`:  
-  Registers all `.bundle` audio files found in the default or specified path inside the mod folder.
+- `RegisterAudioBundles(List<string> audioBundleKeys)`:  
+  Registers audio bundle keys that are already defined in your mod's `bundles.json` manifest.
 
-- `AddFaceCardAudio(string faceName, string audioKey, bool playOnRadioIfFaceIsSelected = false)`:  
-  Adds an audio key to a face card entry, optionally marking it for radio playback only when the face is active.
+- `CreateFaceCardAudio(string faceName, string audioKey, bool playOnRadioIfFaceIsSelected = false)`:  
+  Associates audio clips with a face card, optionally marking them for radio playback when the face is selected.
 
-- `AddRadioAudio(string audioKey)`:  
-  Adds an audio key directly to the global radio pool.
+- `CreateRadioAudio(string audioKey)`:  
+  Adds audio clips to the global radio pool, played independently of face selection.
+
+- `GetAudioManifest()`:  
+  Returns the complete audio manifest (bundles, face mappings, radio audio).
+
+### Setup
+
+**1. Package your audio into a Unity AssetBundle**
+
+Create a `.bundle` file containing your AudioClip assets using Unity's AssetBundle build tools.
+
+**2. Register the bundle in `bundles.json`**
+
+Add an entry to your mod's `bundles.json` manifest:
+```json
+{
+    "key": "heads/mymodaudio.bundle",
+    "dependencyKeys": [
+    ]
+}
+```
+
+**3. Place the bundle file in your mod**
+
+```
+YourMod/
+└── bundles/
+    └── heads/
+        └── mymodaudio.bundle
+```
+
+**4. Register in your mod's OnLoad**
+
+```csharp
+public async Task OnLoad()
+{
+    // List your audio bundle paths to be sent to the client
+    internal static readonly List<string> AudioBundleKeys = new()
+    {
+        "audio/yojenkz.bundle"
+    };
+
+    // Register your audio bundles
+    wttCommon.CustomAudioService.RegisterAudioBundles(AudioBundleKeys)
+
+    // Add face-specific audio
+    wttCommon.CustomAudioService.CreateFaceCardAudio("SoldierFace", "soldier_radio_01", true);
+    
+    // Add standalone radio audio
+    wttCommon.CustomAudioService.CreateRadioAudio("ambient_bg_track_01");
+}
+```
 
 ### Configuration Entries
 
 - `FaceCardVolume`:  
-  Controls the volume level (0.0 to 1.0) of the custom audio played for face cards during character creation.
+  Volume level (0.0 to 1.0) for face card audio during character creation.
 
 - `GymEnabled`:  
-  Enables or disables the custom audio feature specifically for the Gym radio.
+  Enable/disable custom audio for the Gym radio.
 
 - `GymReplacementChance`:  
-  A percentage (0 to 100) chance that custom audio will replace the default Gym radio audio on playback.
+  Percentage (0-100) chance custom audio replaces default Gym radio audio.
 
 - `GymPlayOnFirstEntrance`:  
-  If true, the radio will play custom audio when the player first enters the hideout if their face has a corresponding audio associated with it.
+  Play custom face audio when entering hideout if available.
 
 - `GymRadioVolume`:  
-  Volume level (0.0 to 1.0) specifically for the Gym radio custom audio.
+  Volume for Gym radio custom audio (0.0 to 1.0).
 
 - `RestSpaceEnabled`:  
-  Enables or disables custom audio for the Rest Space radio.
+  Enable/disable custom audio for the Rest Space radio.
 
 - `RestSpaceReplacementChance`:  
-  Percentage chance for the Rest Space radio to play custom audio instead of default audio.
+  Percentage (0-100) chance custom audio replaces default Rest Space audio.
 
 - `RestSpacePlayOnFirstEntrance`:  
-  If true, the radio will play custom audio when the player first enters the hideout if their face has a corresponding audio associated with it.
+  Play custom face audio when entering hideout if available.
 
 - `RestSpaceRadioVolume`:  
-  Volume for the Rest Space radio custom audio.
-
-### Example
-
-```csharp
-// Register audio bundles from your mod assembly
-wttCommon.CustomAudioService.RegisterAudioBundles(assembly);
-
-
-// Add face-specific audio keys without pushing to the radios
-wttCommon.CustomAudioService.CreateFaceCardAudio("SoldierFace", "soldier_radio_01", false);
-
-// Add face-specific audio keys with radio playback condition
-wttCommon.CustomAudioService.CreateFaceCardAudio("SoldierFace", "soldier_radio_01", true);
-
-// Add standalone radio audio
-wttCommon.CustomAudioService.CreateRadioAudio("general_radio_ambient");
-
-```
+  Volume for Rest Space radio custom audio (0.0 to 1.0).
 
 ### Notes
 
-- Audio bundles must be packaged as Unity `.bundle` files and placed in the expected mod directory path (`db/CustomAudioBundles` by default).
-- Face card audio can be flagged to play on radio only when the corresponding face is in use, supporting dynamic sound experiences.
+- Audio bundles are loaded through SPT's Bundle Manager, eliminating redundant downloads and improving Fika compatibility
+- Bundle keys must match entries in your `bundles.json` manifest
 
 ***
+
 
 ### CustomAchievementService
 
@@ -1539,6 +1626,46 @@ db/CustomAchievements/
 - Each achievement requires a valid 24-character MongoDB ID
 - Images are automatically registered as routes: `/files/achievement/{imageName}`
 
+***
+
+### CustomCustomizationService
+
+**Purpose**: Registers custom hideout decorations, customization items, icons, and shooting range mark textures to the game database.
+
+**Usage**:
+```csharp
+// Use default paths
+await wttCommon.CustomCustomizationService.CreateCustomCustomizations(assembly);
+
+// Or specify custom paths
+await wttCommon.CustomCustomizationService.CreateCustomCustomizations(assembly,
+    customizationRelativePath: Path.Combine("db", "CustomCustomization", "Customization"),
+    storageRelativePath: Path.Combine("db", "CustomCustomization", "CustomizationStorage"),
+    hideoutCustomizationRelativePath: Path.Combine("db", "CustomCustomization", "HideoutCustomizationGlobals"),
+    hideoutIconsRelativePath: Path.Combine("db", "CustomCustomization", "HideoutIcons"),
+    markTexturesRelativePath: Path.Combine("db", "CustomCustomization", "ShootingRangeMarkTextures")
+);
+```
+
+**Default Configuration**:
+
+Place JSON files and images in your mod's `db/CustomCustomization/` directory:
+
+| Directory | Purpose |
+|-----------|---------|
+| `Customization/` | Customization item configs (JSON) |
+| `CustomizationStorage/` | CustomizationStorage configs (JSON) |
+| `HideoutCustomizationGlobals/` | Hideout Customization Globals configs (JSON) |
+| `HideoutIcons/` | Icons for Hideout Customizations (`.png`, `.jpg`, `.jpeg`, `.bmp`) |
+| `ShootingRangeMarkTextures/` | Custom hi-resolution mark textures for shooting range (`.png`, `.jpg`, `.jpeg`, `.bmp`) |
+
+**Features**:
+- Register custom hideout walls, ceilings, floors
+- Provides entry for icons
+- Add shooting range marks
+
+**Important Notes**:
+- All Customization configs **must match BSG's models exactly**. That means CustomizationItems, CustomizationStorage, HideoutCustomizationGlobals all must match SPT's defined models.
 ***
 
 ## Example Mod Structure
