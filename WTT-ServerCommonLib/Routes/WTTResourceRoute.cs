@@ -18,6 +18,7 @@ public class WTTResourcesRouter(
     WTTCustomStaticSpawnService staticSpawnService,
     WTTCustomVoiceService voiceService,
     WTTCustomAudioService audioService,
+    WTTCustomCustomizationService customizationService,
     ISptLogger<WTTResourcesRouter> logger) : StaticRouter(jsonUtil, [
     
     // Zones
@@ -40,22 +41,6 @@ public class WTTResourcesRouter(
                 var bundleData = await rigService.GetBundleData(bundleName);
                 if (bundleData?.Length > 0)
                     payload.Add(bundleName, Convert.ToBase64String(bundleData));
-            }
-
-            return jsonUtil.Serialize(payload) ?? throw new NullReferenceException("Could not serialize payload!");
-        }
-    ),
-    // Bundles route
-    new RouteAction<EmptyRequestData>(
-        "/wttcommonlib/spawnsystem/bundles/get", async (_, _, _, _) =>
-        {
-            var manifest = staticSpawnService.GetBundleManifest();
-            var payload = new Dictionary<string, string>();
-            foreach (var name in manifest)
-            {
-                var data = await staticSpawnService.GetBundleData(name);
-                if (data?.Length > 0)
-                    payload.Add(name, Convert.ToBase64String(data));
             }
 
             return jsonUtil.Serialize(payload) ?? throw new NullReferenceException("Could not serialize payload!");
@@ -85,6 +70,38 @@ public class WTTResourcesRouter(
             return jsonUtil.Serialize(result) ?? throw new NullReferenceException("Could not serialize payload!");
         }
     ),
+    new RouteAction<EmptyRequestData>(
+        "/wttcommonlib/hideout/icons/get", async (_, _, _, _) =>
+        {
+            var result = new Dictionary<string, string>();
+
+            foreach (var iconName in customizationService.GetHideoutIconManifest())
+            {
+                var data = await customizationService.GetHideoutIconData(iconName);
+                if (data?.Length > 0) 
+                    result.Add(iconName, Convert.ToBase64String(data));
+            }
+
+            return jsonUtil.Serialize(result) ?? throw new NullReferenceException("Could not serialize hideout icons!");
+        }
+    ),
+
+    new RouteAction<EmptyRequestData>(
+        "/wttcommonlib/hideout/marktextures/get", async (_, _, _, _) =>
+        {
+            var result = new Dictionary<string, string>();
+
+            foreach (var textureName in customizationService.GetMarkTextureManifest())
+            {
+                var data = await customizationService.GetMarkTextureData(textureName);
+                if (data?.Length > 0) 
+                    result.Add(textureName, Convert.ToBase64String(data));
+            }
+
+            return jsonUtil.Serialize(result) ?? throw new NullReferenceException("Could not serialize mark textures!");
+        }
+    ),
+
     // Voices
     new RouteAction<EmptyRequestData>(
         "/wttcommonlib/voices/get", (_, _, _, _) =>
@@ -104,20 +121,4 @@ public class WTTResourcesRouter(
                                     throw new NullReferenceException("Could not serialize audio manifest!"));
     }
     ),
-    new RouteAction<EmptyRequestData>(
-        "/wttcommonlib/audio/bundles/get", async (_, _, _, _) =>
-        {
-            var allBundles = audioService.GetAudioBundleManifest();
-            var payload = new Dictionary<string, string>();
-            foreach (var bundleName in allBundles)
-            {
-                var bundleData = await audioService.GetAudioBundleData(bundleName);
-                if (bundleData?.Length > 0)
-                    payload.Add(bundleName, Convert.ToBase64String(bundleData));
-            }
-
-            return jsonUtil.Serialize(payload) ?? throw new NullReferenceException("Could not serialize audio bundles!");
-        }
-    )
-
 ]);

@@ -1,11 +1,15 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using BepInEx.Logging;
 using Comfort.Common;
 using EFT;
 using EFT.Quests;
 using Newtonsoft.Json;
+using SPT.Custom.Utils;
 using UnityEngine;
 using WTTClientCommonLib.Helpers;
 using WTTClientCommonLib.Models;
@@ -15,16 +19,16 @@ namespace WTTClientCommonLib.Services;
 
 public class AssetLoader(ManualLogSource logger)
 {
-    private bool _initialized;
-    private readonly Dictionary<string, AssetBundle> _loadedBundles = new();
+    private readonly ConcurrentDictionary<string, AssetBundle> _loadedBundles = new();
+    private readonly ConcurrentDictionary<string, string> _bundleKeyLookup = new();
 
     public List<CustomSpawnConfig> SpawnConfigs = null;
 
-    public List<CustomSpawnConfig> FetchSpawnConfigs(string route)
+    public List<CustomSpawnConfig> FetchSpawnConfigs()
     {
         try
         {
-            return Utils.Get<List<CustomSpawnConfig>>(route)
+            return Utils.Get<List<CustomSpawnConfig>>("/wttcommonlib/spawnsystem/configs/get")
                    ?? new List<CustomSpawnConfig>();
         }
         catch (Exception ex)
@@ -42,7 +46,7 @@ public class AssetLoader(ManualLogSource logger)
                 string.IsNullOrEmpty(config.BundleName) ||
                 string.IsNullOrEmpty(config.LocationID))
             {
-                LogHelper.LogDebug($"[WTT-ClientCommonLibFika] Invalid config: {JsonConvert.SerializeObject(config)}");
+                LogHelper.LogDebug($"[WTT-SpawnSystem] Invalid config: {JsonConvert.SerializeObject(config)}");
                 return;
             }
 
@@ -58,7 +62,7 @@ public class AssetLoader(ManualLogSource logger)
             // Evaluate conditions (all must pass)
             if (!EvaluateConditions(player, quest, config))
             {
-                LogHelper.LogDebug($"[WTT-ClientCommonLibFika] Conditions not met for {config.PrefabName}");
+                LogHelper.LogDebug($"[WTT-SpawnSystem] Conditions not met for {config.PrefabName}");
                 return;
             }
 
@@ -74,11 +78,11 @@ public class AssetLoader(ManualLogSource logger)
 
             SpawnPrefab(prefab, config.Position, rotation);
 
-            LogHelper.LogDebug($"[WTT-ClientCommonLibFika] Spawned {config.PrefabName}");
+            LogHelper.LogDebug($"[WTT-SpawnSystem] Spawned {config.PrefabName}");
         }
         catch (Exception ex)
         {
-            logger.LogError($"[WTT-ClientCommonLibFika] Config processing failed: {ex}");
+            logger.LogError($"[WTT-SpawnSystem] Config processing failed: {ex}");
         }
     }
 
@@ -232,7 +236,6 @@ public class AssetLoader(ManualLogSource logger)
                 return false;
             }
 
-
         // All conditions passed
         return true;
     }
@@ -275,73 +278,92 @@ public class AssetLoader(ManualLogSource logger)
         }
     }
 
-    public void InitializeBundles(string route)
+    public async Task InitializeBundlesAsync()
     {
-        if (_initialized) return;
-        _initialized = true;
-
-        LogHelper.LogDebug("Fetching bundles from server...");
-        var map = Utils.Get<Dictionary<string, string>>(route)
-                  ?? new Dictionary<string, string>();
-
-        foreach (var kvp in map)
+        try
         {
-            var rawName = kvp.Key;
-            var key = rawName.ToLowerInvariant().Trim();
-            var data = kvp.Value;
-
-            if (string.IsNullOrEmpty(data))
+            if (BundleManager.Bundles.Keys.Count == 0)
             {
-                logger.LogWarning($"Empty data for bundle '{rawName}'");
-                continue;
+                LogHelper.LogDebug("[AssetLoader] Downloading bundle manifest...");
+                await BundleManager.DownloadManifest();
+                LogHelper.LogDebug($"[AssetLoader] Manifest loaded with {BundleManager.Bundles.Count} bundles available");
             }
 
-            byte[] bytes;
-            try
+            _bundleKeyLookup.Clear();
+            foreach (var bundleKey in BundleManager.Bundles.Keys)
             {
-                bytes = Convert.FromBase64String(data);
+                // Extract short name (last segment without .bundle)
+                var shortName = Path.GetFileNameWithoutExtension(bundleKey);
+                _bundleKeyLookup.TryAdd(shortName, bundleKey);
+                LogHelper.LogDebug($"[AssetLoader] Registered bundle: {shortName} → {bundleKey}");
             }
-            catch (Exception ex)
-            {
-                logger.LogError($"Base64 decode failed for '{rawName}': {ex}");
-                continue;
-            }
-
-            try
-            {
-                var bundle = AssetBundle.LoadFromMemory(bytes);
-                if (bundle == null)
-                {
-                    logger.LogError($"Failed to load bundle '{rawName}' from memory");
-                    continue;
-                }
-
-                _loadedBundles[key] = bundle;
-                LogHelper.LogDebug($"Loaded bundle '{key}' ({bytes.Length} bytes)");
-            }
-            catch (Exception ex)
-            {
-                logger.LogError($"Error loading bundle '{rawName}': {ex}");
-            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError($"[AssetLoader] Error downloading bundle manifest: {ex}");
         }
     }
 
-    public GameObject LoadPrefabFromBundle(string bundleName, string assetName)
+    public GameObject LoadPrefabFromBundle(string bundleIdentifier, string assetName)
     {
-        if (!_initialized) InitializeBundles("/wttcommonlib/spawnsystem/bundles/get");
-
-        var key = bundleName.ToLowerInvariant().Trim();
-        if (!_loadedBundles.TryGetValue(key, out var bundle))
+        try
         {
-            logger.LogError(
-                $"[ASSET LOADER] Bundle not in cache: '{bundleName}' (tried '{key}')");
+            var bundleKey = bundleIdentifier;
+            
+            if (!BundleManager.Bundles.ContainsKey(bundleKey))
+            {
+                if (_bundleKeyLookup.TryGetValue(bundleIdentifier, out var resolvedKey))
+                {
+                    bundleKey = resolvedKey;
+                }
+                else
+                {
+                    logger.LogError($"[AssetLoader] Bundle '{bundleIdentifier}' not found in manifest (tried as short name and full key)");
+                    return null;
+                }
+            }
+
+            if (!BundleManager.Bundles.TryGetValue(bundleKey, out var bundleItem))
+            {
+                logger.LogError($"[AssetLoader] Bundle key '{bundleKey}' not in BundleManager");
+                return null;
+            }
+
+            var bundlePath = BundleManager.GetBundleFilePath(bundleItem);
+            
+            if (!File.Exists(bundlePath))
+            {
+                logger.LogError($"[AssetLoader] Bundle file not found at: {bundlePath}");
+                return null;
+            }
+
+            if (!_loadedBundles.TryGetValue(bundleKey, out var bundle))
+            {
+                bundle = AssetBundle.LoadFromFile(bundlePath);
+                if (bundle == null)
+                {
+                    logger.LogError($"[AssetLoader] Failed to load bundle from: {bundlePath}");
+                    return null;
+                }
+
+                _loadedBundles[bundleKey] = bundle;
+                LogHelper.LogDebug($"[AssetLoader] Loaded bundle: {bundleKey} from {bundlePath}");
+            }
+
+            var prefab = bundle.LoadAsset<GameObject>(assetName);
+            if (prefab == null)
+            {
+                logger.LogError($"[AssetLoader] Prefab '{assetName}' not found in bundle '{bundleKey}'");
+                return null;
+            }
+
+            return prefab;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError($"[AssetLoader] Error loading prefab from bundle: {ex}");
             return null;
         }
-
-        var prefab = bundle.LoadAsset<GameObject>(assetName);
-        if (prefab == null) logger.LogError($"[ASSET LOADER] Prefab '{assetName}' not in bundle '{key}'");
-
-        return prefab;
     }
 
     private void SpawnPrefab(GameObject prefab, Vector3 position, Quaternion rotation)
@@ -349,17 +371,31 @@ public class AssetLoader(ManualLogSource logger)
         try
         {
             Object.Instantiate(prefab, position, rotation);
-            LogHelper.LogDebug($"[SPAWNER] Created {prefab.name} at {position}");
+            LogHelper.LogDebug($"[Spawner] Instantiated {prefab.name} at {position}");
         }
         catch (Exception ex)
         {
-            logger.LogError($"[SPAWNER] Instantiation failed: {ex}");
+            logger.LogError($"[Spawner] Failed to instantiate prefab: {ex}");
         }
     }
+
     public void UnloadAllBundles()
     {
         if (_loadedBundles.Count == 0) return;
-        foreach (var bundle in _loadedBundles.Values) bundle.Unload(true);
+        
+        foreach (var bundle in _loadedBundles.Values)
+        {
+            try
+            {
+                bundle.Unload(true);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError($"[AssetLoader] Error unloading bundle: {ex}");
+            }
+        }
+        
         _loadedBundles.Clear();
+        LogHelper.LogDebug("[AssetLoader] All bundles unloaded");
     }
 }

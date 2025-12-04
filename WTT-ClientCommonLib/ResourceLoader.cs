@@ -1,8 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using BepInEx.Logging;
+using EFT.Hideout;
 using EFT.UI.DragAndDrop;
+using SPT.Custom.Utils;
+using UI.Hideout;
 using UnityEngine;
 using WTTClientCommonLib.Helpers;
 using WTTClientCommonLib.Models;
@@ -13,6 +17,10 @@ namespace WTTClientCommonLib;
 
 public class ResourceLoader(ManualLogSource logger, AssetLoader assetLoader)
 {
+    public static Dictionary<string, Sprite> _customHideoutIcons = new();
+    public static bool _iconsLoaded = false;
+    public static Dictionary<string, Texture2D> _customMarkTextures = new();
+    public static bool _texturesLoaded = false;
     public static AudioManifest Manifest { get; private set; } = new();
     public static AudioClipCache ClipCache { get; private set; }
 
@@ -31,13 +39,14 @@ public class ResourceLoader(ManualLogSource logger, AssetLoader assetLoader)
         try
         {
             LogHelper.LogDebug("Loading resources from server...");
+            await assetLoader.InitializeBundlesAsync();
             LoadVoicesFromServer();
             LoadSlotImagesFromServer();
             LoadRigLayoutsFromServer();
             LoadAudioManifestFromServer();
-            LoadAudioBundlesFromServer();
-            assetLoader.InitializeBundles("/wttcommonlib/spawnsystem/bundles/get");
-            assetLoader.SpawnConfigs = assetLoader.FetchSpawnConfigs("/wttcommonlib/spawnsystem/configs/get");
+            LoadCustomHideoutIconsFromServer();
+            LoadCustomMarkTexturesFromServer();
+            assetLoader.SpawnConfigs = assetLoader.FetchSpawnConfigs();
             LogHelper.LogDebug($"Loaded {assetLoader.SpawnConfigs.Count} spawn configurations");
             LogHelper.LogDebug("All resources loaded successfully from server");
         }
@@ -46,58 +55,39 @@ public class ResourceLoader(ManualLogSource logger, AssetLoader assetLoader)
             logger.LogError($"Error loading resources from server: {ex}");
         }
     }
-    public async Task LoadAudioManifestFromServer()
+    public async Task RegisterAudioBundlesAsync(List<string> audioBundleKeys)
     {
         try
         {
-            LogHelper.LogDebug("Loading audio manifest from server...");
-        
-            var manifestResponse = Utils.Get<AudioManifest>("/wttcommonlib/audio/manifest/get");
-            if (manifestResponse == null)
+            LogHelper.LogDebug($"[AudioManager] Registering {audioBundleKeys.Count} audio bundles");
+            
+            if (BundleManager.Bundles.Keys.Count == 0)
             {
-                LogHelper.LogWarn("No audio manifest received from server");
-                return;
+                await BundleManager.DownloadManifest();
             }
 
-            Manifest = manifestResponse;
-            LogHelper.LogDebug($"Loaded manifest with {Manifest.AudioBundles.Count} audio bundles");
-            LogHelper.LogDebug($"FaceCard mappings: {Manifest.FaceCardMappings.Count} entries");
-            LogHelper.LogDebug($"Radio audio: {Manifest.RadioAudio.Count} entries");
-        }
-        catch (Exception ex)
-        {
-            LogHelper.LogError($"Error loading audio manifest: {ex}");
-        }
-    }
-    public void LoadAudioBundlesFromServer()
-    {
-        try
-        {
-            var bundleMap = Utils.Get<Dictionary<string, string>>("/wttcommonlib/audio/bundles/get");
-            if (bundleMap == null)
+            foreach (var bundleKey in audioBundleKeys)
             {
-                LogHelper.LogWarn("No audio bundles received from server");
-                return;
-            }
-
-            LogHelper.LogDebug($"Received {bundleMap.Count} audio bundles");
-
-            foreach (var kvp in bundleMap)
-            {
-                var bundleName = kvp.Key;
-                var base64Data = kvp.Value;
-        
-                if (string.IsNullOrEmpty(base64Data))
+                if (!BundleManager.Bundles.TryGetValue(bundleKey, out var bundleItem))
+                {
+                    LogHelper.LogWarn($"[AudioManager] Audio bundle '{bundleKey}' not found in manifest");
                     continue;
+                }
+
+                var bundlePath = BundleManager.GetBundleFilePath(bundleItem);
+                
+                if (!File.Exists(bundlePath))
+                {
+                    LogHelper.LogWarn($"[AudioManager] Bundle file not found: {bundlePath}");
+                    continue;
+                }
 
                 try
                 {
-                    byte[] bundleData = Convert.FromBase64String(base64Data);
-                    var bundle = AssetBundle.LoadFromMemory(bundleData);
-            
+                    var bundle = AssetBundle.LoadFromFile(bundlePath);
                     if (bundle == null)
                     {
-                        LogHelper.LogWarn($"Failed to load audio bundle: {bundleName}");
+                        LogHelper.LogWarn($"[AudioManager] Failed to load bundle: {bundleKey}");
                         continue;
                     }
 
@@ -106,70 +96,76 @@ public class ResourceLoader(ManualLogSource logger, AssetLoader assetLoader)
                     {
                         clip.LoadAudioData();
                         ClipCache.CacheAudioClip(clip.name, clip);
-                        LogHelper.LogDebug($"Cached audio from bundle: {clip.name}");
+                        LogHelper.LogDebug($"[AudioManager] Cached audio: {clip.name}");
                     }
 
-                    LogHelper.LogDebug($"Loaded {clips.Length} audio clips from {bundleName}");
+                    LogHelper.LogDebug($"[AudioManager] Loaded {clips.Length} audio clips from {bundleKey}");
                 }
                 catch (Exception ex)
                 {
-                    LogHelper.LogError($"Failed to load audio bundle {bundleName}: {ex.Message}");
+                    LogHelper.LogError($"[AudioManager] Error loading audio bundle {bundleKey}: {ex}");
                 }
             }
 
-            LogHelper.LogDebug("Audio bundles loaded successfully");
+            LogHelper.LogDebug("[AudioManager] Audio bundle registration complete");
         }
         catch (Exception ex)
         {
-            LogHelper.LogError($"Error loading audio bundles: {ex}");
+            LogHelper.LogError($"[AudioManager] Error registering audio bundles: {ex}");
+        }
+    }
+
+    public async Task LoadAudioManifestFromServer()
+    {
+        try
+        {
+            LogHelper.LogDebug("[AudioManager] Loading audio manifest from server...");
+            
+            var manifestResponse = Utils.Get<AudioManifest>("/wttcommonlib/audio/manifest/get");
+            if (manifestResponse == null)
+            {
+                LogHelper.LogWarn("[AudioManager] No audio manifest received from server");
+                return;
+            }
+
+            Manifest = manifestResponse;
+            LogHelper.LogDebug($"[AudioManager] Loaded manifest with {Manifest.FaceCardMappings.Count} face entries");
+            LogHelper.LogDebug($"[AudioManager] Radio audio: {Manifest.RadioAudio.Count} tracks");
+
+            var audioBundleKeys = manifestResponse.AudioBundles;
+            await RegisterAudioBundlesAsync(audioBundleKeys);
+        }
+        catch (Exception ex)
+        {
+            LogHelper.LogError($"[AudioManager] Error loading audio manifest: {ex}");
         }
     }
 
     public static string GetAudioForFace(string faceName)
     {
-        LogHelper.LogDebug($"GetRandomAudioForFace called with: {faceName}");
-        LogHelper.LogDebug($"Manifest has {Manifest.FaceCardMappings.Count} face entries");
+        LogHelper.LogDebug($"[AudioManager] GetAudioForFace called with: {faceName}");
 
-        if (Manifest.FaceCardMappings.TryGetValue(faceName, out var faceEntry))
+        if (Manifest?.FaceCardMappings.TryGetValue(faceName, out var faceEntry) == true)
         {
-            if (faceEntry.Audio != null && faceEntry.Audio.Count > 0)
+            if (faceEntry.Audio?.Count > 0)
             {
-                // Pick one at random
                 int idx = UnityEngine.Random.Range(0, faceEntry.Audio.Count);
                 var audioKey = faceEntry.Audio[idx];
-                LogHelper.LogDebug($"Randomly selected audio key for face {faceName}: {audioKey}");
-
-                if (ClipCache.TryGetAudioClip(audioKey, out var clip))
-                {
-                    LogHelper.LogDebug($"Clip in cache: {clip.name}, duration: {clip.length}s");
-                }
-                else
-                {
-                    LogHelper.LogDebug($"Clip NOT in cache: {audioKey}");
-                }
-
+                LogHelper.LogDebug($"[AudioManager] Selected audio key for {faceName}: {audioKey}");
                 return audioKey;
             }
-            else
-            {
-                LogHelper.LogDebug($"No audio keys for face: {faceName}");
-            }
-        }
-        else
-        {
-            LogHelper.LogDebug($"No face entry found for: {faceName}");
         }
 
+        LogHelper.LogDebug($"[AudioManager] No audio found for face: {faceName}");
         return null;
     }
 
+    public static List<string> GetRadioAudio()
+    {
+        LogHelper.LogDebug($"[AudioManager] Returning {Manifest?.RadioAudio.Count ?? 0} radio tracks");
+        return Manifest?.RadioAudio ?? new List<string>();
+    }
 
-public static List<string> GetRadioAudio()
-{
-    LogHelper.LogDebug($"GetRadioAudio called. Returning {Manifest.RadioAudio.Count} radio tracks");
-    LogHelper.LogDebug($"Radio audio: {string.Join(", ", Manifest.RadioAudio)}");
-    return Manifest.RadioAudio;
-}
     private void LoadVoicesFromServer()
     {
         try
@@ -229,6 +225,128 @@ public static List<string> GetRadioAudio()
         }
     }
 
+    public static void LoadCustomMarkTexturesFromServer()
+    {
+        try
+        {
+            LogHelper.LogDebug("[HideoutTextures] Loading custom shooting range mark textures from server...");
+            
+            var textureData = SPT.Common.Http.RequestHandler.GetJson("/wttcommonlib/hideout/marktextures/get");
+            if (string.IsNullOrEmpty(textureData))
+            {
+                LogHelper.LogWarn("[HideoutTextures] No mark textures received from server");
+                return;
+            }
+
+            var textureDict = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, string>>(textureData);
+            if (textureDict == null || textureDict.Count == 0)
+            {
+                LogHelper.LogWarn("[HideoutTextures] Texture dictionary is empty");
+                return;
+            }
+
+            int loadedCount = 0;
+            foreach (var kvp in textureDict)
+            {
+                try
+                {
+                    var markId = kvp.Key;
+                    var base64Data = kvp.Value;
+
+                    if (string.IsNullOrEmpty(base64Data))
+                    {
+                        LogHelper.LogWarn($"[HideoutTextures] Empty data for mark: {markId}");
+                        continue;
+                    }
+
+                    byte[] textureBytes = Convert.FromBase64String(base64Data);
+                    var texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+                    texture.LoadImage(textureBytes);
+                    texture.name = markId;
+
+                    _customMarkTextures[markId] = texture;
+                    loadedCount++;
+                    LogHelper.LogDebug($"[HideoutTextures] Loaded texture for mark: {markId}");
+                }
+                catch (Exception ex)
+                {
+                    LogHelper.LogError($"[HideoutTextures] Error loading texture for {kvp.Key}: {ex.Message}");
+                }
+            }
+
+            LogHelper.LogDebug($"[HideoutTextures] Custom shooting range mark textures loaded successfully ({loadedCount} total)");
+
+            _texturesLoaded = true;
+        }
+        catch (Exception ex)
+        {
+            LogHelper.LogError($"[HideoutTextures] Error loading custom mark textures: {ex}");
+        }
+    }
+
+    public static void LoadCustomHideoutIconsFromServer()
+    {
+        try
+        {
+            LogHelper.LogDebug("[HideoutIcons] Loading custom hideout customization icons from server...");
+            
+            var iconData = SPT.Common.Http.RequestHandler.GetJson("/wttcommonlib/hideout/icons/get");
+            if (string.IsNullOrEmpty(iconData))
+            {
+                LogHelper.LogWarn("[HideoutIcons] No hideout icons received from server");
+                return;
+            }
+
+            var iconDict = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, string>>(iconData);
+            if (iconDict == null || iconDict.Count == 0)
+            {
+                LogHelper.LogWarn("[HideoutIcons] Icon dictionary is empty");
+                return;
+            }
+
+            int loadedCount = 0;
+            foreach (var kvp in iconDict)
+            {
+                try
+                {
+                    var itemId = kvp.Key;
+                    var base64Data = kvp.Value;
+
+                    if (string.IsNullOrEmpty(base64Data))
+                    {
+                        LogHelper.LogWarn($"[HideoutIcons] Empty data for item: {itemId}");
+                        continue;
+                    }
+
+                    byte[] textureData = Convert.FromBase64String(base64Data);
+                    var texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+                    texture.LoadImage(textureData);
+
+                    var sprite = Sprite.Create(
+                        texture,
+                        new Rect(0, 0, texture.width, texture.height),
+                        new Vector2(0.5f, 0.5f)
+                    );
+                    sprite.name = itemId;
+
+                    _customHideoutIcons[itemId] = sprite;
+                    loadedCount++;
+                    LogHelper.LogDebug($"[HideoutIcons] Loaded icon for item: {itemId}");
+                }
+                catch (Exception ex)
+                {
+                    LogHelper.LogError($"[HideoutIcons] Error loading icon for {kvp.Key}: {ex.Message}");
+                }
+            }
+
+            LogHelper.LogDebug($"[HideoutIcons] Custom hideout icons loaded successfully ({loadedCount} total)");
+            _iconsLoaded = true;
+        }
+        catch (Exception ex)
+        {
+            LogHelper.LogError($"[HideoutIcons] Error loading custom hideout icons: {ex}");
+        }
+    }
     private void LoadRigLayoutsFromServer()
     {
         try
