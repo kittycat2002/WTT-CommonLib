@@ -1227,7 +1227,7 @@ wttCommon.CustomSlotImageService.CreateSlotImages(assembly,
 ```
 
 **Configuration**:
-- Place image files (`.png`, `.jpg`, `.jpeg`, `.bmp`) in `db/CustomSlotImages/` inside your mod folder
+- Place image files (`.png`, `.jpg`, etc) in `db/CustomSlotImages/` inside your mod folder
 - Name each file as the slot ID it replaces (filename without extension)
 - The slot ID/key will be used for locale entries if needed
 
@@ -1656,8 +1656,8 @@ Place JSON files and images in your mod's `db/CustomCustomization/` directory:
 | `Customization/` | Customization item configs (JSON) |
 | `CustomizationStorage/` | CustomizationStorage configs (JSON) |
 | `HideoutCustomizationGlobals/` | Hideout Customization Globals configs (JSON) |
-| `HideoutIcons/` | Icons for Hideout Customizations (`.png`, `.jpg`, `.jpeg`, `.bmp`) |
-| `ShootingRangeMarkTextures/` | Custom hi-resolution mark textures for shooting range (`.png`, `.jpg`, `.jpeg`, `.bmp`) |
+| `HideoutIcons/` | Icons for Hideout Customizations (`.png`, `.jpg`, etc) |
+| `ShootingRangeMarkTextures/` | Custom hi-resolution mark textures for shooting range (`.png`, `.jpg`, etc) |
 
 **Features**:
 - Register custom hideout walls, ceilings, floors
